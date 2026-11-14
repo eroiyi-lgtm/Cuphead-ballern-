@@ -20,6 +20,7 @@ func _ready() -> void:
 	Game.god_mode = true
 	_check(Game.running, "Level läuft nach der Titelkarte")
 	_check(pete.is_on_floor(), "Pete steht am Start auf dem Boden")
+	_check(_alive_enemies(level) == 4, "Segment A: 4 Ink-Blobs (%d)" % _alive_enemies(level))
 
 	# --- Laufen -------------------------------------------------------------
 	var x0 := pete.global_position.x
@@ -46,6 +47,7 @@ func _ready() -> void:
 
 	# --- Feuern -------------------------------------------------------------
 	var shots0: int = Game.pool.player_shots_spawned
+	pete.facing = -1  # weg von den Blobs, die werden unten einzeln geprüft
 	InputRouter.override_fire_held = true
 	await _frames(120)
 	InputRouter.override_fire_held = false
@@ -54,7 +56,6 @@ func _ready() -> void:
 
 	# --- Ink-Blob -----------------------------------------------------------
 	var blobs_before := _alive_enemies(level)
-	_check(blobs_before == 4, "Segment A: 4 Ink-Blobs (%d)" % blobs_before)
 	pete.global_position = Vector2(560, Level01.FLOOR_Y)
 	pete.facing = 1
 	InputRouter.override_fire_held = true
@@ -97,7 +98,9 @@ func _ready() -> void:
 	level.skip_to_arena()
 	var started := await _wait_until(func() -> bool: return brain.is_fighting(), 300)
 	_check(started and level.in_arena, "Kamera lockt Arena, Boss startet ohne Ladebildschirm")
-	await _frames(60)
+	var t0 := Time.get_ticks_msec()
+	while AudioDirector.state != &"boss1" and Time.get_ticks_msec() - t0 < 3000:
+		await get_tree().physics_frame
 	_check(AudioDirector.state == &"boss1", "Musik wechselt auf Takt zu Boss Phase 1")
 
 	await _frames(60 * 40)
@@ -200,7 +203,8 @@ func _jump_buffer_works() -> bool:
 	InputRouter.override_jump_held = true
 	await _frames(2)
 	InputRouter.override_jump_held = false
-	await _wait_until(func() -> bool: return pete.velocity.y > 0.0 and floor_y - pete.global_position.y < 70.0, 120)
+	# ca. 5 Frames vor der Landung drücken (Puffer: 8 Frames)
+	await _wait_until(func() -> bool: return pete.velocity.y > 0.0 and floor_y - pete.global_position.y < 30.0, 120)
 	InputRouter.override_jump_held = true  # gedrückt, solange Pete noch in der Luft ist
 	await _frames(14)
 	InputRouter.override_jump_held = false

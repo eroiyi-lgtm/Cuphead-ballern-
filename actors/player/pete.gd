@@ -118,14 +118,7 @@ func _physics_process(delta: float) -> void:
 
 	# Springen mit Coyote Time und Jump Buffer
 	if _buffer > 0 and _coyote > 0:
-		velocity.y = TUNING.jump_velocity
-		_buffer = 0
-		_coyote = 0
-		_jumping = true
-		locked = false
-		AudioDirector.play_sfx(&"jump")
-		_haptic()
-		_squash(Vector2(0.8, 1.2))
+		_start_jump()
 	if _jumping and not jump_held and velocity.y < TUNING.jump_cut_velocity:
 		velocity.y = TUNING.jump_cut_velocity
 		_jumping = false
@@ -138,8 +131,11 @@ func _physics_process(delta: float) -> void:
 
 	var now_on_floor := is_on_floor()
 	if now_on_floor and not _was_on_floor:
-		AudioDirector.play_sfx(&"land")
-		_squash(Vector2(1.25, 0.75))
+		if _buffer > 0:
+			_start_jump()  # gemerkter Sprung zündet im Lande-Tick, kein verlorener Frame
+		else:
+			AudioDirector.play_sfx(&"land")
+			_squash(Vector2(1.25, 0.75))
 	_was_on_floor = now_on_floor
 
 	aim_dir = compute_aim(move, now_on_floor, locked)
@@ -151,6 +147,17 @@ func _physics_process(delta: float) -> void:
 	_update_invuln(delta)
 	if Game.level and global_position.y > Game.level.kill_y:
 		_fall_out()
+
+
+func _start_jump() -> void:
+	velocity.y = TUNING.jump_velocity
+	_buffer = 0
+	_coyote = 0
+	_jumping = true
+	locked = false
+	AudioDirector.play_sfx(&"jump")
+	_haptic()
+	_squash(Vector2(0.8, 1.2))
 
 
 ## 8-Wege-Zielen. Am Boden ohne Lock: waagerecht, schräg oben, oben. Nach unten nur in der Luft.
