@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="PencilTuning" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/classes/pencil_tuning.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+hp = 8
+contact_damage = 1
+hover_speed = 380.0
+hover_time = 1.2
+aim_time = 0.6
+dive_speed = 1100.0
+stuck_time = 1.0
+rise_speed = 500.0

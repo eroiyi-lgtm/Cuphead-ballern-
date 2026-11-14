@@ -1,0 +1,27 @@
+[gd_resource type="Resource" script_class="BossData" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://data/classes/boss_data.gd" id="1"]
+[ext_resource type="Script" path="res://data/classes/boss_phase.gd" id="2"]
+[ext_resource type="Script" path="res://data/classes/boss_attack.gd" id="3"]
+[ext_resource type="Resource" path="res://data/boss_inkwell/ink_spit.tres" id="4"]
+[ext_resource type="Resource" path="res://data/boss_inkwell/quill_decree.tres" id="5"]
+[ext_resource type="Resource" path="res://data/boss_inkwell/seal_stamp.tres" id="6"]
+
+[sub_resource type="Resource" id="Resource_phase1"]
+script = ExtResource("2")
+display_name = "Die Audienz"
+hp = 1100
+attacks = Array[ExtResource("3")]([ExtResource("4"), ExtResource("5"), ExtResource("6")])
+speed_mult = 1.0
+rage_below_fraction = 0.0
+
+[resource]
+script = ExtResource("1")
+display_name = "Sir Reginald Inkwell"
+phases = Array[ExtResource("2")]([SubResource("Resource_phase1")])
+intro_time = 1.5
+phase_transition_time = 2.0
+min_telegraph = 0.5
+max_repeats = 2
+rage_speed_mult = 1.15
+rage_pause_mult = 0.8

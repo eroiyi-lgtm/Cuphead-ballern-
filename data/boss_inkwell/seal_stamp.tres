@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BossAttack" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://data/classes/boss_attack.gd" id="1"]
+[ext_resource type="Script" path="res://actors/bosses/inkwell/patterns/seal_stamp.gd" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"seal_stamp"
+display_name = "Siegelstempel"
+weight = 1.0
+windup_time = 0.7
+active_time = 1.6
+recovery_time = 0.7
+telegraph_anim = &"telegraph_seal"
+telegraph_sfx = &"boss_gong"
+pattern = ExtResource("2")
+params = {
+"drop_time": 0.12,
+"hit_window": 0.2,
+"wave_radius": 30.0,
+"wave_speed": 650.0
+}

@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BossAttack" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://data/classes/boss_attack.gd" id="1"]
+[ext_resource type="Script" path="res://actors/bosses/inkwell/patterns/quill_decree.gd" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"quill_decree"
+display_name = "Federkiel-Erlass"
+weight = 1.0
+windup_time = 0.8
+active_time = 1.2
+recovery_time = 0.6
+telegraph_anim = &"telegraph_quill"
+telegraph_sfx = &"boss_scratch"
+pattern = ExtResource("2")
+params = {
+"column_width": 200.0,
+"count": 4,
+"fall_speed": 950.0,
+"shadow_width": 120.0
+}

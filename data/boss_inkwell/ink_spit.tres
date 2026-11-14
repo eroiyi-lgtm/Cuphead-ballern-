@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BossAttack" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://data/classes/boss_attack.gd" id="1"]
+[ext_resource type="Script" path="res://actors/bosses/inkwell/patterns/ink_spit.gd" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"ink_spit"
+display_name = "Tintenspucke"
+weight = 1.0
+windup_time = 0.6
+active_time = 1.4
+recovery_time = 0.6
+telegraph_anim = &"telegraph_ink_spit"
+telegraph_sfx = &"boss_gurgle"
+pattern = ExtResource("2")
+params = {
+"flight_time": 1.0,
+"gravity": 1400.0,
+"offsets": [-180.0, 0.0, 180.0],
+"stagger": 0.12
+}
