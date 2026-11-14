@@ -32,13 +32,17 @@ func _ready() -> void:
 	if visual == null:
 		visual = Node2D.new()
 		visual.name = "Visual"
-		visual.add_child(EnemyBase.poly([Vector2(-12, -50), Vector2(12, -50), Vector2(12, 24), Vector2(-12, 24)], Color("d9a441")))
-		visual.add_child(EnemyBase.poly([Vector2(-12, -50), Vector2(12, -50), Vector2(12, -38), Vector2(-12, -38)], Palette.PARRY.darkened(0.3)))
-		visual.add_child(EnemyBase.poly([Vector2(-12, 24), Vector2(12, 24), Vector2(0, 50)], Palette.PAPER))
-		_tip = EnemyBase.poly([Vector2(-4, 40), Vector2(4, 40), Vector2(0, 52)], Palette.INK)
+		for side in [-1.0, 1.0]:
+			var wing := EnemyBase.sprite(preload("res://art/enemies/wing.svg"), Vector2(14, 0))
+			wing.position = Vector2(side * 10.0, -14.0)
+			wing.scale.x *= side
+			visual.add_child(wing)
+			var flap := wing.create_tween().set_loops()
+			flap.tween_property(wing, "rotation", -0.5 * side, 0.08)
+			flap.tween_property(wing, "rotation", 0.3 * side, 0.08)
+		visual.add_child(EnemyBase.sprite(preload("res://art/enemies/pencil.svg"), Vector2.ZERO))
+		_tip = EnemyBase.poly([Vector2(-4, 36), Vector2(4, 36), Vector2(0, 48)], Palette.INK)
 		visual.add_child(_tip)
-		visual.add_child(EnemyBase.ellipse(Vector2(-22, -20), Vector2(16, 7), Color(1, 1, 1, 0.8)))
-		visual.add_child(EnemyBase.ellipse(Vector2(22, -20), Vector2(16, 7), Color(1, 1, 1, 0.8)))
 		add_child(visual)
 	hp = T.hp
 	var hurt := RectangleShape2D.new()

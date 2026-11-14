@@ -23,7 +23,10 @@ var _hurt_shape: CollisionShape2D
 var _pose_tween: Tween
 var _quill_arm: Node2D
 var _seal_arm: Node2D
-var _monocle: Polygon2D
+var _monocle: Sprite2D
+var _arm_lines: Array[Line2D] = []
+const MONOCLE_POS := Vector2(27, 11)
+const SEAL_REST := Vector2(165, -300)
 var _fx: ShaderMaterial
 var _flash_frames := 0
 var _anim: Tween
@@ -84,9 +87,9 @@ func reset() -> void:
 	_head.scale = Vector2.ONE
 	_head.rotation = 0.0
 	_quill_arm.rotation = 0.0
-	_seal_arm.position = Vector2(150, -330)
+	_seal_arm.position = SEAL_REST
 	_monocle.visible = true
-	_monocle.position = Vector2.ZERO
+	_monocle.position = MONOCLE_POS
 	_apply_pose(0, false)
 	_fx.set_shader_parameter(&"dissolve", 0.0)
 	_fx.set_shader_parameter(&"flash_amount", 0.0)
@@ -96,7 +99,7 @@ func reset() -> void:
 
 
 func mouth_position() -> Vector2:
-	return _head.global_position + Vector2(-70, 15) * _upper.scale
+	return _head.global_position + Vector2(-10, 68) * _upper.scale
 
 
 ## Ursprung der Klecks-Spirale (Phase 3): Mitte des Kopfes.
@@ -117,7 +120,7 @@ func _on_hurt(damage: int, _source: Node) -> bool:
 	brain.take_damage(damage)
 	hits_taken += 1
 	_flash_frames = 2
-	_fx.set_shader_parameter(&"flash_amount", 0.8)
+	_fx.set_shader_parameter(&"flash_amount", 0.35)
 	if hits_taken % 6 == 0:
 		AudioDirector.play_sfx(&"boss_tink")  # hörbarer Fortschritt
 	return true
@@ -168,7 +171,7 @@ func _apply_pose(phase: int, animate: bool) -> void:
 func _on_rage() -> void:
 	AudioDirector.play_sfx(&"boss_gong")
 	var tw := create_tween()
-	tw.tween_property(_monocle, "position", Vector2(30, 420), 0.6).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
+	tw.tween_property(_monocle, "position", MONOCLE_POS + Vector2(14, 420), 0.6).set_trans(Tween.TRANS_BOUNCE).set_ease(Tween.EASE_OUT)
 	Events.boss_rage.emit()
 
 
@@ -208,9 +211,9 @@ func _play(anim: StringName, duration: float) -> void:
 			_anim.tween_property(_quill_arm, "rotation", -0.9, 0.12)
 			_anim.tween_property(_quill_arm, "rotation", 0.0, 0.3)
 		&"telegraph_seal":  # hebt das Siegel
-			_anim.tween_property(_seal_arm, "position", Vector2(150, -520), duration).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+			_anim.tween_property(_seal_arm, "position", SEAL_REST + Vector2(0, -200), duration).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		&"attack_seal":
-			_anim.tween_property(_seal_arm, "position", Vector2(150, -330), 0.12)
+			_anim.tween_property(_seal_arm, "position", SEAL_REST, 0.12)
 		&"telegraph_paper":  # faltet Papier
 			var steps := maxi(int(duration / 0.12), 2)
 			for i in steps:
@@ -240,41 +243,59 @@ func _build_graybox() -> void:
 	visual = Node2D.new()
 	visual.name = "Visual"
 	add_child(visual)
-	# Tintenfass
+	# Tintenfass (Zeichnung art/reginald/inkwell.svg, Ursprung: Boden Mitte)
 	_inkwell = Node2D.new()
 	_inkwell.use_parent_material = true
 	visual.add_child(_inkwell)
-	_inkwell.add_child(EnemyBase.poly([Vector2(-180, 0), Vector2(180, 0), Vector2(150, -280), Vector2(-150, -280)], Palette.INK))
-	_inkwell.add_child(EnemyBase.poly([Vector2(-150, -150), Vector2(150, -150), Vector2(145, -200), Vector2(-145, -200)], Palette.BOSS_GOLD))
-	_inkwell.add_child(EnemyBase.poly([Vector2(-90, -280), Vector2(90, -280), Vector2(80, -320), Vector2(-80, -320)], Palette.INK.lightened(0.15)))
+	_inkwell.add_child(EnemyBase.sprite(preload("res://art/reginald/inkwell.svg"), Vector2(0, -162)))
 	# Oberkörper (Kopf + Arme), bewegt sich je Phase
 	_upper = Node2D.new()
 	_upper.use_parent_material = true
 	visual.add_child(_upper)
-	# Kopf: Federhalter-Spitze mit Gesicht, Perücke, Monokel
+	_arm_lines = [_hose(), _hose()]
 	_head = Node2D.new()
 	_head.use_parent_material = true
 	_head.position = Vector2(0, -420)
 	_upper.add_child(_head)
-	_head.add_child(EnemyBase.poly([Vector2(-80, 100), Vector2(80, 100), Vector2(0, -150)], Palette.BOSS_GOLD))
-	_head.add_child(EnemyBase.ellipse(Vector2(0, 10), Vector2(70, 80), Palette.PAPER))
-	for p in [Vector2(-75, -30), Vector2(-85, 30), Vector2(75, -30), Vector2(85, 30), Vector2(0, -80)]:
-		_head.add_child(EnemyBase.ellipse(p, Vector2(32, 32), Color.WHITE))
-	_head.add_child(EnemyBase.ellipse(Vector2(-25, -5), Vector2(10, 14), Palette.INK))
-	_head.add_child(EnemyBase.ellipse(Vector2(-70, 15), Vector2(26, 16), Palette.INK))  # Mund
-	_monocle = EnemyBase.ellipse(Vector2(25, -5), Vector2(18, 18), Palette.BOSS_GOLD)
+	_head.add_child(EnemyBase.sprite(preload("res://art/reginald/head.svg"), Vector2(0, -10)))
+	_monocle = EnemyBase.sprite(preload("res://art/reginald/monocle.svg"), MONOCLE_POS)
 	_head.add_child(_monocle)
 	# Federkiel-Arm
 	_quill_arm = Node2D.new()
-	_quill_arm.position = Vector2(-120, -330)
+	_quill_arm.position = Vector2(-150, -300)
 	_quill_arm.use_parent_material = true
 	_upper.add_child(_quill_arm)
-	_quill_arm.add_child(EnemyBase.poly([Vector2(0, 0), Vector2(-20, -10), Vector2(-60, -150), Vector2(-40, -150)], Color.WHITE))
-	_quill_arm.add_child(EnemyBase.ellipse(Vector2(0, 0), Vector2(16, 16), Color.WHITE))
+	_quill_arm.add_child(EnemyBase.sprite(preload("res://art/reginald/quill_arm.svg"), Vector2(-37.5, -78.5)))
 	# Siegel-Arm
 	_seal_arm = Node2D.new()
-	_seal_arm.position = Vector2(150, -330)
+	_seal_arm.position = SEAL_REST
 	_seal_arm.use_parent_material = true
 	_upper.add_child(_seal_arm)
-	_seal_arm.add_child(EnemyBase.ellipse(Vector2.ZERO, Vector2(16, 16), Color.WHITE))
-	_seal_arm.add_child(EnemyBase.ellipse(Vector2(0, -30), Vector2(26, 26), Palette.HERO.darkened(0.3)))
+	_seal_arm.add_child(EnemyBase.sprite(preload("res://art/reginald/seal_arm.svg"), Vector2(0, -25)))
+
+
+func _hose() -> Line2D:
+	var l := Line2D.new()
+	l.width = 11.0
+	l.default_color = Palette.INK
+	l.begin_cap_mode = Line2D.LINE_CAP_ROUND
+	l.end_cap_mode = Line2D.LINE_CAP_ROUND
+	l.antialiased = true
+	l.use_parent_material = true
+	_upper.add_child(l)
+	return l
+
+
+## Rubber-Hose-Arme vom Kragen zu den Handschuhen, folgen jeder Pose.
+func _process(_delta: float) -> void:
+	var collar := _head.position + Vector2(0, 120)
+	var ends := [_quill_arm.position, _seal_arm.position]
+	for i in 2:
+		var a := collar + Vector2(-60.0 if i == 0 else 60.0, 0)
+		var b: Vector2 = ends[i]
+		var ctrl := (a + b) * 0.5 + Vector2(-40.0 if i == 0 else 40.0, 40)
+		var pts := PackedVector2Array()
+		for k in 9:
+			var t := k / 8.0
+			pts.append(a.lerp(ctrl, t).lerp(ctrl.lerp(b, t), t))
+		_arm_lines[i].points = pts

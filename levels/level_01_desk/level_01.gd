@@ -273,6 +273,7 @@ func _build_world() -> void:
 	for piece: Array in FLOOR_PIECES:
 		_block(world, Rect2(piece[0], FLOOR_Y, piece[1] - piece[0], 500.0), Palette.WALNUT)
 		_deco(Rect2(piece[0], FLOOR_Y, piece[1] - piece[0], 14.0), Palette.WALNUT.darkened(0.35))
+		_wood_grain(piece[0], piece[1])
 	# A: Buchtürme
 	for i in TOWERS.size():
 		var t: Array = TOWERS[i]
@@ -330,6 +331,23 @@ func _build_props() -> void:
 	_props.append(well)
 
 
+func _wood_grain(x0: float, x1: float) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(x0) + 7
+	for row in 5:
+		var l := Line2D.new()
+		l.width = 2.5
+		l.default_color = Color(Palette.WALNUT.darkened(0.3), 0.6)
+		var y := FLOOR_Y + 36.0 + row * 34.0
+		var pts := PackedVector2Array()
+		var x := x0
+		while x <= x1:
+			pts.append(Vector2(x, y + sin(x * 0.004 + row) * 6.0 + rng.randf_range(-1.5, 1.5)))
+			x += 120.0
+		l.points = pts
+		add_child(l)
+
+
 func _close_gate() -> void:
 	gate_open = false
 	if _gate_tween:
@@ -339,10 +357,24 @@ func _close_gate() -> void:
 	_gate_shape.set_deferred("disabled", false)
 
 
-func _block(body: StaticBody2D, r: Rect2, color: Color) -> CollisionShape2D:
+func _block(body: StaticBody2D, r: Rect2, color: Color, outline := true) -> CollisionShape2D:
 	var cs := _wall(body, r)
 	_deco_on(body, r, color)
+	if outline:
+		_ink_outline(body, r)
 	return cs
+
+
+## Tusche-Kontur für alles, worauf Pete steht (Hintergründe bleiben ohne Outlines).
+func _ink_outline(parent: Node, r: Rect2) -> void:
+	var l := Line2D.new()
+	l.width = 5.0
+	l.default_color = Palette.INK
+	l.joint_mode = Line2D.LINE_JOINT_ROUND
+	l.closed = true
+	l.antialiased = true
+	l.points = PackedVector2Array([r.position, Vector2(r.end.x, r.position.y), r.end, Vector2(r.position.x, r.end.y)])
+	parent.add_child(l)
 
 
 func _wall(body: StaticBody2D, r: Rect2) -> CollisionShape2D:

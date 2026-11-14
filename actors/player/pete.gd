@@ -4,7 +4,8 @@ extends CharacterBody2D
 
 const TUNING: PlayerTuning = preload("res://data/player/pete_tuning.tres")
 const WEAPON: WeaponTuning = preload("res://data/player/ink_pistol.tres")
-const CHEST := Vector2(0, -62)
+const CHEST := Vector2(9, -68)   ## Schulter des Schussarms
+const ACTOR_FX := preload("res://fx/shaders/actor_fx.gdshader")
 
 var hp := 3
 var alive := true
@@ -40,13 +41,13 @@ func _ready() -> void:
 	body.position = Vector2(0, -TUNING.body_size.y / 2.0)
 	add_child(body)
 
-	visual = get_node_or_null(^"Visual")
-	if visual == null:
-		visual = PeteVisual.build()
-		add_child(visual)
-	_body_visual = visual.get_node_or_null(^"Body")
-	if _body_visual == null:
-		_body_visual = visual
+	var rig := PeteRig.new()
+	add_child(rig)
+	visual = rig
+	_body_visual = rig.body
+	var fx := ShaderMaterial.new()
+	fx.shader = ACTOR_FX
+	visual.material = fx
 	_muzzle = PeteVisual.muzzle_star()
 	add_child(_muzzle)
 
@@ -142,6 +143,7 @@ func _physics_process(delta: float) -> void:
 	if locked and aim_dir.x != 0.0:
 		facing = int(signf(aim_dir.x))
 	visual.scale.x = facing
+	(visual as PeteRig).animate(delta, now_on_floor, velocity, Vector2(aim_dir.x * facing, aim_dir.y), fire_held, locked)
 
 	_update_weapon(delta, fire_held)
 	_update_invuln(delta)
@@ -203,7 +205,7 @@ func _update_weapon(delta: float, fire_held: bool) -> void:
 		_flash_t -= delta
 		var frame := clampi(int((WEAPON.muzzle_flash_time - _flash_t) * 24.0), 0, 2)
 		_muzzle.visible = true
-		_muzzle.position = CHEST + aim_dir * WEAPON.muzzle_distance
+		_muzzle.position = Vector2(CHEST.x * facing, CHEST.y) + aim_dir * WEAPON.muzzle_distance
 		_muzzle.rotation = aim_dir.angle()
 		_muzzle.scale = Vector2.ONE * [0.9, 1.3, 0.7][frame]
 	else:
@@ -213,7 +215,7 @@ func _update_weapon(delta: float, fire_held: bool) -> void:
 func _spawn_pellet() -> void:
 	if Game.pool == null:
 		return
-	var pos := global_position + CHEST + aim_dir * WEAPON.muzzle_distance
+	var pos := global_position + Vector2(CHEST.x * facing, CHEST.y) + aim_dir * WEAPON.muzzle_distance
 	Game.pool.spawn_player_pellet(pos, aim_dir * WEAPON.pellet_speed, WEAPON.damage)
 
 

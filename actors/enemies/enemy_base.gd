@@ -41,7 +41,7 @@ func _on_hurt(damage: int, _source: Node) -> bool:
 		return false
 	hp -= damage
 	_flash_frames = 2
-	_fx.set_shader_parameter(&"flash_amount", 1.0)
+	_fx.set_shader_parameter(&"flash_amount", 0.6)
 	AudioDirector.play_sfx(&"enemy_hit")
 	if hp <= 0:
 		die()
@@ -67,6 +67,15 @@ func die() -> void:
 	var tw := create_tween()
 	tw.tween_method(func(v: float) -> void: _fx.set_shader_parameter(&"dissolve", v), 0.0, 1.0, 0.35)
 	tw.tween_callback(queue_free)
+
+
+static func sprite(tex: Texture2D, pos: Vector2) -> Sprite2D:
+	var s := Sprite2D.new()
+	s.texture = tex
+	s.scale = Vector2(0.5, 0.5)
+	s.position = pos
+	s.use_parent_material = true
+	return s
 
 
 static func ellipse(center: Vector2, radii: Vector2, c: Color, points := 18) -> Polygon2D:

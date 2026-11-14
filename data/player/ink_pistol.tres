@@ -9,4 +9,4 @@ damage = 4
 pellet_speed = 1800.0
 pellet_delay_frames = 2
 muzzle_flash_time = 0.125
-muzzle_distance = 56.0
+muzzle_distance = 46.0

@@ -28,13 +28,9 @@ func _ready() -> void:
 		visual = Node2D.new()
 		visual.name = "Visual"
 		_body = Node2D.new()
+		_body.use_parent_material = true
 		visual.add_child(_body)
-		_body.add_child(EnemyBase.ellipse(Vector2(0, -30), Vector2(32, 30), Palette.INK))
-		_body.add_child(EnemyBase.ellipse(Vector2(-10, -38), Vector2(7, 9), Palette.PAPER))
-		_body.add_child(EnemyBase.ellipse(Vector2(10, -38), Vector2(7, 9), Palette.PAPER))
-		_body.add_child(EnemyBase.ellipse(Vector2(-9, -36), Vector2(3, 5), Palette.INK))
-		_body.add_child(EnemyBase.ellipse(Vector2(11, -36), Vector2(3, 5), Palette.INK))
-		_body.add_child(EnemyBase.poly([Vector2(-4, -60), Vector2(4, -74), Vector2(6, -58)], Palette.DANGER))
+		_body.add_child(EnemyBase.sprite(preload("res://art/enemies/ink_blob.svg"), Vector2(0, -19)))
 		add_child(visual)
 	else:
 		_body = visual

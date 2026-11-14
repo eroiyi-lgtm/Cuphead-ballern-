@@ -15,7 +15,7 @@ var _books: Array[AnimatableBody2D] = []
 var _book_base: Array[Vector2] = []
 var _flood: Polygon2D
 var _flood_hitbox: Hitbox
-var _quill_decor: Polygon2D
+var _quill_decor: Sprite2D
 var _t := 0.0
 
 
@@ -64,10 +64,10 @@ func _ready() -> void:
 		_books.append(book)
 		_book_base.append(p)
 
-	_quill_decor = Polygon2D.new()
-	_quill_decor.polygon = PackedVector2Array([Vector2(0, 0), Vector2(26, -520), Vector2(60, -540), Vector2(40, 0)])
-	_quill_decor.color = Color.WHITE
-	_quill_decor.position = Vector2(play_right - 40.0, floor_y)
+	_quill_decor = Sprite2D.new()
+	_quill_decor.texture = preload("res://art/reginald/big_quill.svg")
+	_quill_decor.scale = Vector2(0.5, 0.5)
+	_quill_decor.position = Vector2(play_right - 40.0 + 35.0, floor_y - 265.0)
 	_quill_decor.z_index = -1
 	add_child(_quill_decor)
 	set_phase(0)

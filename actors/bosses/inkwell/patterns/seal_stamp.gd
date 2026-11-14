@@ -17,14 +17,11 @@ func _ready() -> void:
 	_stamp.z_index = 3
 	_stamp.visible = false
 	add_child(_stamp)
-	var gold := Polygon2D.new()
-	gold.polygon = PackedVector2Array([Vector2(-80, -150), Vector2(80, -150), Vector2(80, 0), Vector2(-80, 0)])
-	gold.color = Palette.BOSS_GOLD
-	_stamp.add_child(gold)
-	var wax := Polygon2D.new()
-	wax.polygon = PackedVector2Array([Vector2(-40, -60), Vector2(40, -60), Vector2(40, -20), Vector2(-40, -20)])
-	wax.color = Palette.HERO.darkened(0.3)
-	_stamp.add_child(wax)
+	var art := Sprite2D.new()
+	art.texture = preload("res://art/reginald/stamp.svg")
+	art.scale = Vector2(0.5, 0.5)
+	art.position = Vector2(0, -77)  # Unterkante des Wachssiegels auf dem Boden
+	_stamp.add_child(art)
 	var shape := RectangleShape2D.new()
 	shape.size = Vector2(150, 140)
 	_hitbox = Hitbox.create(_stamp, Layers.PETE_HURTBOX, shape, Vector2(0, -70), 1)

@@ -61,9 +61,19 @@ und iOS (iPhone + iPad). Vor dem ersten Build: Export-Templates in Godot install
 | `data/` | A1 + A3 | Alle Zahlen als `.tres` – nachjustieren ohne Code |
 | `debug/` | A1 | Debug-Overlay, Hitbox-Anzeige, Smoke-Test |
 
+## Grafik
+
+Alle Grafiken sind eigene Zeichnungen im Stil der 1930er (Rubber Hose, Tusche-Outlines, Pie-Cut-Augen),
+keine fremden Assets. Sie entstehen als SVG aus `tools/draw_art.py` (`python3 tools/draw_art.py`) und
+liegen in `art/`. Pete ist ein Rig (`actors/player/pete_rig.gd`): Kopf, Rumpf, Handschuhe und Schuhe
+als Zeichnung, Arme und Beine als Tusche-Schläuche, Bewegung „on twos“ mit 12 Posen pro Sekunde.
+`fx/shaders/actor_fx.gdshader` lässt die Linien zittern (Boiling Lines), `paper_warp`-Ersatz für die
+Hintergründe ist `fx/shaders/paper_wash.gdshader` (Aquarell-Flecken, entsättigt).
+Vor jeder Veröffentlichung trotzdem: Bild- und Marken-Check.
+
 ## Noch offen
 
-Handgezeichnete Frames statt Graybox-Polygonen, echte Big-Band-Stems und Foley statt
-Platzhalter-Synthese, `paper_warp.gdshader` (braucht texturierte Hintergründe), Geräte-Playtests
+Handgezeichnete Animationsframes (z. B. für Boss-Attacken) als nächste Stufe über dem Rig, echte Big-Band-Stems und Foley statt
+Platzhalter-Synthese, Geräte-Playtests
 (60 fps auf Mittelklasse-Android und iPhone, Touch-Gefühl, Lock-Aim-Variante), Tuning der
 Schwierigkeit mit 5 externen Testern.

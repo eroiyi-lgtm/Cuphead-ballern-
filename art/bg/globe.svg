@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="260" height="260" viewBox="0 0 260 260">
+<defs><radialGradient id="sea" cx="0.4" cy="0.35" r="0.8"><stop offset="0" stop-color="#bcd0c4"/><stop offset="1" stop-color="#7f9c92"/></radialGradient></defs>
+<g transform="translate(130,130)">
+ <circle r="110" fill="url(#sea)"/>
+ <path d="M-60 -60 C-30 -80 0 -60 -10 -30 C-30 -10 -60 -20 -70 -40 Z M20 10 C50 -10 80 10 70 50 C50 70 20 60 20 30 Z M-40 40 C-20 30 0 50 -20 70 C-40 70 -50 56 -40 40 Z" fill="#c9b27a"/>
+ <ellipse rx="110" ry="36" fill="none" stroke="#9c8456" stroke-width="5"/>
+ <ellipse rx="40" ry="110" fill="none" stroke="#9c8456" stroke-width="5"/>
+ <path d="M-118 0 A118 118 0 0 1 118 0" fill="none" stroke="#a88a52" stroke-width="10"/>
+</g>
+</svg>
