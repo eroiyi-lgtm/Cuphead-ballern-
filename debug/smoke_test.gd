@@ -20,7 +20,8 @@ func _ready() -> void:
 	Game.god_mode = true
 	_check(Game.running, "Level läuft nach der Titelkarte")
 	_check(pete.is_on_floor(), "Pete steht am Start auf dem Boden")
-	_check(_alive_enemies(level) == 4, "Segment A: 4 Ink-Blobs (%d)" % _alive_enemies(level))
+	_check(_alive_enemies(level, Level01.SEG_B) == 4, "Segment A: 4 Ink-Blobs (%d)" % _alive_enemies(level, Level01.SEG_B))
+	_check(_alive_enemies(level) == 20, "Segmente A–D: 10 Blobs + 10 Pencils (%d)" % _alive_enemies(level))
 
 	# --- Laufen -------------------------------------------------------------
 	var x0 := pete.global_position.x
@@ -55,11 +56,11 @@ func _ready() -> void:
 	_check(shots >= 16 and shots <= 18, "Dauerfeuer 8,5 Schuss/s (%d Schuss in 2 s)" % shots)
 
 	# --- Ink-Blob -----------------------------------------------------------
-	var blobs_before := _alive_enemies(level)
+	var blobs_before := _alive_enemies(level, Level01.SEG_B)
 	pete.global_position = Vector2(560, Level01.FLOOR_Y)
 	pete.facing = 1
 	InputRouter.override_fire_held = true
-	var killed := await _wait_until(func() -> bool: return _alive_enemies(level) < blobs_before, 300)
+	var killed := await _wait_until(func() -> bool: return _alive_enemies(level, Level01.SEG_B) < blobs_before, 300)
 	InputRouter.override_fire_held = false
 	_check(killed, "Ink-Blob stirbt nach 3 Treffern")
 
@@ -82,11 +83,11 @@ func _ready() -> void:
 	await _frames(70)
 	_check(get_tree().paused and level.get_parent().get_node("HUD").is_death_screen_visible(), "Todesbildschirm mit Fortschritt erscheint")
 	Game.restart_level()
-	_check(Game.last_restart_ms < 500.0, "Neustart in %.2f ms (Ziel ≤ 500 ms)" % Game.last_restart_ms)
 	await _frames(2)
+	_check(Game.last_restart_ms < 500.0, "Neustart in %.2f ms (Ziel ≤ 500 ms)" % Game.last_restart_ms)
 	_check(pete.alive and pete.hp == 3 and pete.controls_enabled, "Pete nach Neustart voll da und steuerbar")
 	_check(pete.global_position.distance_to(Level01.SPAWN) < 2.0, "Pete am Startpunkt")
-	_check(_alive_enemies(level) == 4, "Gegner nach Neustart wieder da")
+	_check(_alive_enemies(level) == 20, "Gegner nach Neustart wieder da")
 	_check(not get_tree().paused and Game.running, "Spiel läuft nach Neustart")
 	_check(AudioDirector.state == &"run" and AudioDirector.bar <= 1, "Musik zurück auf Takt 1")
 
@@ -120,15 +121,17 @@ func _ready() -> void:
 	_check(max_run <= 2, "Kein Muster mehr als 2-mal hintereinander (max %d)" % max_run)
 
 	# Gefahr ist echt: wer stehen bleibt, wird getroffen
+	var arena_x := Level01.ARENA_LEFT + 600.0
 	Game.god_mode = false
-	pete.global_position = Vector2(5600, Level01.FLOOR_Y)
+	pete.global_position = Vector2(arena_x, Level01.FLOOR_Y)
 	var hit := await _wait_until(func() -> bool: return pete.hp < 3, 60 * 15)
+	_heal(pete)
 	Game.god_mode = true
 	_check(hit, "Boss-Attacken treffen einen stehenden Pete")
 
 	# Pete trifft den Boss
 	var dmg0 := brain.total_damage
-	pete.global_position = Vector2(5600, Level01.FLOOR_Y)
+	pete.global_position = Vector2(arena_x, Level01.FLOOR_Y)
 	pete.facing = 1
 	InputRouter.override_fire_held = true
 	await _frames(60 * 5)
@@ -136,19 +139,185 @@ func _ready() -> void:
 	var dealt := brain.total_damage - dmg0
 	_check(dealt >= 100, "Pete trifft Reginald (%d Schaden in 5 s, max 170)" % dealt)
 
+	# --- Phase 2 "Die Papierflieger-Debatte" -----------------------------------
+	brain.take_damage(brain.phase_hp)
+	await _frames(2)
+	_check(brain.phase_index == 1 and level.arena.phase == 1, "Phase 2: Flut zur Hälfte und schwebende Bücher")
+	t0 = Time.get_ticks_msec()
+	while AudioDirector.state != &"boss2" and Time.get_ticks_msec() - t0 < 3000:
+		await get_tree().physics_frame
+	_check(AudioDirector.state == &"boss2", "Musik wechselt zu Boss Phase 2")
+	_telegraphs.clear()
+	pete.global_position = Vector2(Level01.ARENA_LEFT + 150.0, Level01.FLOOR_Y)
+	await _frames(60 * 40)
+	_check_phase_attacks(3, "Phase 2")
+	var guards := level.count_alive(PencilSprite, Level01.ARENA_LEFT)
+	_check(guards >= 1 and guards <= 4, "Bleistift-Garde: 1–4 Pencils in der Arena (%d)" % guards)
+
+	# Flut in der rechten Hälfte schadet, die Tintenwelle trifft am Boden, nicht auf den Büchern
+	level._kill_all_enemies()
+	Game.pool.clear_all()
+	Game.god_mode = false
+	pete.global_position = Vector2(Level01.PLAY_RIGHT - 120.0, Level01.FLOOR_Y)
+	_check(await _wait_until(func() -> bool: return pete.hp < 3, 30), "Phase 2: Tinte am Boden rechts schadet")
+	_heal(pete)
+	_check(await _survives_wave_on(pete, true), "Tintenwelle: auf dem Buch sicher")
+	_check(not await _survives_wave_on(pete, false), "Tintenwelle: am Boden getroffen")
+	_heal(pete)
+
+	# --- Phase 3 "Der letzte Federstrich" ---------------------------------------
+	brain.take_damage(brain.phase_hp)
+	await _frames(2)
+	_check(brain.phase_index == 2 and level.arena.phase == 2, "Phase 3: Bücher und Flut weg")
+	_telegraphs.clear()
+	pete.global_position = Vector2(Level01.ARENA_LEFT + 150.0, Level01.FLOOR_Y)
+	await _frames(60 * 40)
+	_check_phase_attacks(2, "Phase 3")
+	brain.take_damage(brain.phase_hp - int(brain.data.phases[2].hp * 0.3) + 1)
+	_check(brain.raging and brain.speed_mult() > 1.1, "Rage ab 30 % HP: 15 % schneller")
+	Game.pool.clear_all()
+	Game.god_mode = false
+	_heal(pete)
+	pete.global_position = Vector2(Level01.ARENA_LEFT + 700.0, Level01.FLOOR_Y)
+	brain.forced_attack = &"quill_strike"
+	_check(await _wait_until(func() -> bool: return pete.hp < 3, 60 * 12), "Federstoß trifft Petes Bahn")
+	Game.god_mode = true
+	_heal(pete)
+
 	# Sieg
 	var wins0 := SaveData.wins
 	brain.take_damage(brain.phase_hp)
 	await _frames(5)
-	_check(brain.state == BossBrain.State.DEAD and _completed, "Phase 1 besiegt → Level geschafft")
+	_check(brain.state == BossBrain.State.DEAD and _completed, "Phase 3 besiegt → Level geschafft")
 	_check(SaveData.wins == wins0 + 1, "Sieg gespeichert")
+	_check(level.count_alive(PencilSprite) == 0, "Minions verschwinden beim Sieg")
 
 	Game.restart_level()
 	await _frames(2)
-	_check(brain.state == BossBrain.State.IDLE and not level.in_arena, "Neustart setzt Boss und Arena zurück")
+	_check(brain.state == BossBrain.State.IDLE and not level.in_arena and level.arena.phase == 0, "Neustart setzt Boss und Arena zurück")
+
+	# --- Run-Segmente B–D ----------------------------------------------------
+	Game.god_mode = false
+	pete.global_position = Vector2(5030.0, 820.0)  # in die Lücke der Lineal-Brücke
+	await _wait_until(func() -> bool: return pete.hp < 3, 120)
+	_check(pete.hp == 2 and absf(pete.global_position.x - (Level01.SEG_B + 150.0)) < 40.0, "Sturz in den Tintensee: 1 HP, Respawn am Brückenanfang")
+	_heal(pete)
+	pete.global_position = Vector2(7400.0, 1000.0)  # in die Uhrwerk-Grube
+	await _wait_until(func() -> bool: return pete.hp < 3, 120)
+	_check(pete.hp == 2 and pete.global_position.x < Level01.SEG_C + 600.0, "Sturz ins Uhrwerk: Respawn vor den Zahnrädern")
+	_heal(pete)
+	level._kill_all_enemies()
+	pete.global_position = Vector2(10090.0, Level01.FLOOR_Y)
+	_check(await _wait_until(func() -> bool: return pete.hp < 3, 60 * 4), "Kippendes Tintenfass: Flut am Boden schadet")
+	_heal(pete)
+	pete.global_position = Vector2(9800.0, Level01.FLOOR_Y - 170.0)
+	await _frames(10)
+	_heal(pete)  # Überlappungen sind nach dem Teleport einen Tick alt
+	var got_hit := await _wait_until(func() -> bool: return pete.hp < 3, 60 * 4)
+	_check(not got_hit and pete.is_on_floor() and pete.global_position.y < Level01.FLOOR_Y - 100.0, "Federhalter-Steg: sicher über der Flut")
+	Game.god_mode = true
+
+	# --- Durchlauf-Bot: Start bis Arena --------------------------------------
+	Game.restart_level()
+	await _frames(2)
+	var result := await _bot_run(240)
+	_check(result[0], "Bot läuft Segment A–D bis in die Arena (%.0f s, %d Stürze)" % [result[1], result[2]])
+
+	Game.restart_level()
+	await _frames(2)
+	_check(Game.running and pete.hp == 3, "Neustart nach Bot-Lauf")
 
 	print("\n%s: %d Fehler" % ["GRÜN" if failures == 0 else "ROT", failures])
 	get_tree().quit(failures)
+
+
+func _check_phase_attacks(expected: int, label: String) -> void:
+	var ids := {}
+	var min_windup := 99.0
+	var max_run := 0
+	var run := 0
+	var last: StringName = &""
+	for t in _telegraphs:
+		ids[t[0]] = true
+		min_windup = minf(min_windup, t[1])
+		run = run + 1 if t[0] == last else 1
+		last = t[0]
+		max_run = maxi(max_run, run)
+	_check(ids.size() == expected, "%s: alle %d Attacken kommen vor (%s)" % [label, expected, ", ".join(ids.keys())])
+	_check(min_windup >= 0.5 and max_run <= 2, "%s: Vorwarnung ≥ 0,5 s (min %.2f), max. 2 Wiederholungen (%d)" % [label, min_windup, max_run])
+
+
+func _heal(pete: Pete) -> void:
+	pete.hp = 3
+	pete._invuln = 0.0
+	Events.player_hp_changed.emit(3)
+
+
+func _survives_wave_on(pete: Pete, on_book: bool) -> bool:
+	var brain: BossBrain = Game.level.boss.brain
+	await _wait_until(func() -> bool: return brain.state == BossBrain.State.RECOVERY or brain.state == BossBrain.State.TELEGRAPH, 600)
+	await _wait_until(func() -> bool: return brain.state == BossBrain.State.RECOVERY, 600)
+	Game.god_mode = true
+	pete.hp = 3
+	pete._invuln = 0.0
+	Game.pool.clear_all()
+	if on_book:
+		var x := Level01.ARENA_LEFT + (Level01.PLAY_RIGHT - Level01.ARENA_LEFT) * 0.18
+		pete.global_position = Vector2(x, Level01.FLOOR_Y - 200.0)
+	else:
+		pete.global_position = Vector2(Level01.ARENA_LEFT + 450.0, Level01.FLOOR_Y)
+	brain.forced_attack = &"ink_wave"
+	await _wait_until(func() -> bool: return brain.current != null and brain.current.id == &"ink_wave" and brain.state == BossBrain.State.ACTIVE, 600)
+	Game.level._kill_all_enemies()  # nur die Welle prüfen, keine Pencils der Garde
+	Game.pool.clear_all()
+	var orig: Callable = pete.hurtbox.receiver
+	pete.hurtbox.receiver = func(d: int, src: Node) -> bool:
+		if src:
+			print("    Treffer durch ", src.get_path())
+		return orig.call(d, src)
+	Game.god_mode = false
+	await _wait_until(func() -> bool: return brain.state == BossBrain.State.RECOVERY or pete.hp < 3, 300)
+	var survived := pete.hp == 3
+	pete.hurtbox.receiver = orig
+	Game.god_mode = true
+	pete.hp = 3
+	pete._invuln = 0.0
+	return survived
+
+
+## Einfacher Bot: rechts laufen, feuern, springen bei Wand oder fehlendem Boden voraus.
+func _bot_run(max_s: float) -> Array:
+	var pete: Pete = Game.player
+	var level: Level01 = Game.level
+	Game.god_mode = true
+	InputRouter.override_move = Vector2.RIGHT
+	InputRouter.override_fire_held = true
+	var space := pete.get_world_2d().direct_space_state
+	var frames := 0
+	var falls := 0
+	var hold := 0
+	var last_y := pete.global_position.y
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	while frames < max_s * 60.0 and not level.in_arena:
+		var p := pete.global_position
+		if hold > 0:
+			hold -= 1
+		elif pete.is_on_floor():
+			var ahead := PhysicsRayQueryParameters2D.create(p + Vector2(70, -10), p + Vector2(70, 60), Layers.WORLD)
+			var gap := space.intersect_ray(ahead).is_empty()
+			if pete.is_on_wall() or gap or rng.randf() < 0.02:
+				hold = rng.randi_range(10, 22)
+		InputRouter.override_jump_held = hold > 0
+		await get_tree().physics_frame
+		frames += 1
+		if pete.global_position.y < last_y - 150.0 and p.y > 950.0:
+			falls += 1
+		last_y = pete.global_position.y
+	InputRouter.override_move = Vector2.ZERO
+	InputRouter.override_fire_held = false
+	InputRouter.override_jump_held = false
+	return [level.in_arena, frames / 60.0, falls]
 
 
 func _check(ok: bool, what: String) -> void:
@@ -170,10 +339,10 @@ func _wait_until(cond: Callable, max_frames: int) -> bool:
 	return cond.call()
 
 
-func _alive_enemies(level: Level01) -> int:
+func _alive_enemies(level: Level01, max_x := INF) -> int:
 	var n := 0
 	for e in level.enemies.get_children():
-		if e is EnemyBase and not e.dead:
+		if e is EnemyBase and not e.dead and e.global_position.x < max_x:
 			n += 1
 	return n
 

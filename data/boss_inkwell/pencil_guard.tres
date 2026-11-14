@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="BossAttack" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://data/classes/boss_attack.gd" id="1"]
+[ext_resource type="Script" path="res://actors/bosses/inkwell/patterns/pencil_guard.gd" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"pencil_guard"
+display_name = "Bleistift-Garde"
+weight = 0.6
+windup_time = 0.6
+active_time = 0.4
+recovery_time = 1.2
+telegraph_anim = &"telegraph_whistle"
+telegraph_sfx = &"whistle"
+pattern = ExtResource("2")
+params = {
+"count": 2,
+"hover_y": 300.0,
+"max_alive": 4
+}

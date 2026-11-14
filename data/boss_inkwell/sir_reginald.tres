@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="BossData" load_steps=7 format=3]
+[gd_resource type="Resource" script_class="BossData" load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://data/classes/boss_data.gd" id="1"]
 [ext_resource type="Script" path="res://data/classes/boss_phase.gd" id="2"]
@@ -6,6 +6,11 @@
 [ext_resource type="Resource" path="res://data/boss_inkwell/ink_spit.tres" id="4"]
 [ext_resource type="Resource" path="res://data/boss_inkwell/quill_decree.tres" id="5"]
 [ext_resource type="Resource" path="res://data/boss_inkwell/seal_stamp.tres" id="6"]
+[ext_resource type="Resource" path="res://data/boss_inkwell/paper_planes.tres" id="7"]
+[ext_resource type="Resource" path="res://data/boss_inkwell/ink_wave.tres" id="8"]
+[ext_resource type="Resource" path="res://data/boss_inkwell/pencil_guard.tres" id="9"]
+[ext_resource type="Resource" path="res://data/boss_inkwell/blot_spiral.tres" id="10"]
+[ext_resource type="Resource" path="res://data/boss_inkwell/quill_strike.tres" id="11"]
 
 [sub_resource type="Resource" id="Resource_phase1"]
 script = ExtResource("2")
@@ -15,10 +20,26 @@ attacks = Array[ExtResource("3")]([ExtResource("4"), ExtResource("5"), ExtResour
 speed_mult = 1.0
 rage_below_fraction = 0.0
 
+[sub_resource type="Resource" id="Resource_phase2"]
+script = ExtResource("2")
+display_name = "Die Papierflieger-Debatte"
+hp = 1000
+attacks = Array[ExtResource("3")]([ExtResource("7"), ExtResource("8"), ExtResource("9")])
+speed_mult = 1.0
+rage_below_fraction = 0.0
+
+[sub_resource type="Resource" id="Resource_phase3"]
+script = ExtResource("2")
+display_name = "Der letzte Federstrich"
+hp = 900
+attacks = Array[ExtResource("3")]([ExtResource("10"), ExtResource("11")])
+speed_mult = 1.0
+rage_below_fraction = 0.3
+
 [resource]
 script = ExtResource("1")
 display_name = "Sir Reginald Inkwell"
-phases = Array[ExtResource("2")]([SubResource("Resource_phase1")])
+phases = Array[ExtResource("2")]([SubResource("Resource_phase1"), SubResource("Resource_phase2"), SubResource("Resource_phase3")])
 intro_time = 1.5
 phase_transition_time = 2.0
 min_telegraph = 0.5

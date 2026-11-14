@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="BossAttack" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://data/classes/boss_attack.gd" id="1"]
+[ext_resource type="Script" path="res://actors/bosses/inkwell/patterns/paper_planes.gd" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"paper_planes"
+display_name = "Papierflieger-Staffel"
+weight = 1.0
+windup_time = 0.7
+active_time = 1.6
+recovery_time = 0.7
+telegraph_anim = &"telegraph_paper"
+telegraph_sfx = &"paper_rustle"
+pattern = ExtResource("2")
+params = {
+"count": 5,
+"homing_time": 1.2,
+"homing_turn": 2.4,
+"speed": 520.0,
+"stagger": 0.18
+}

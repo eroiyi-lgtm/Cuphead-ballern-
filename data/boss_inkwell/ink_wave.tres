@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="BossAttack" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://data/classes/boss_attack.gd" id="1"]
+[ext_resource type="Script" path="res://actors/bosses/inkwell/patterns/ink_wave.gd" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"ink_wave"
+display_name = "Tintenwelle"
+weight = 1.0
+windup_time = 1.0
+active_time = 1.5
+recovery_time = 0.8
+telegraph_anim = &"telegraph_wave"
+telegraph_sfx = &"bubble"
+pattern = ExtResource("2")
+params = {
+"warn_height": 18.0,
+"wave_height": 70.0
+}

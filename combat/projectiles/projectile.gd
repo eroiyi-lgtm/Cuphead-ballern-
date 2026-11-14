@@ -11,6 +11,8 @@ var orient := false
 var active := false
 var splat_color := Palette.INK
 var radius := 10.0
+var homing_time := 0.0   ## Sekunden, in denen das Geschoss Pete nachsteuert
+var homing_turn := 0.0   ## max. Drehung in rad/s
 
 var _shape := CircleShape2D.new()
 var _outer := Polygon2D.new()
@@ -30,7 +32,8 @@ func _init() -> void:
 	process_mode = Node.PROCESS_MODE_DISABLED
 
 
-## opts: radius, gravity, life, collide_world, shape ("pellet"|"drop"|"feather"|"wave"), color, core
+## opts: radius, gravity, life, collide_world, shape ("pellet"|"drop"|"feather"|"wave"|"plane"),
+## color, core, homing_time, homing_turn
 func fire(pos: Vector2, vel: Vector2, dmg: int, target_mask: int, opts: Dictionary) -> void:
 	position = pos
 	velocity = vel
@@ -40,10 +43,12 @@ func fire(pos: Vector2, vel: Vector2, dmg: int, target_mask: int, opts: Dictiona
 	collide_world = opts.get("collide_world", false)
 	radius = opts.get("radius", 10.0)
 	_shape.radius = radius
+	homing_time = opts.get("homing_time", 0.0)
+	homing_turn = opts.get("homing_turn", 0.0)
 	collision_layer = 0
 	collision_mask = target_mask | (Layers.WORLD if collide_world else 0)
 	var shape: String = opts.get("shape", "drop")
-	orient = shape == "pellet" or shape == "feather" or shape == "drop"
+	orient = shape == "pellet" or shape == "feather" or shape == "drop" or shape == "plane"
 	var color: Color = opts.get("color", Palette.DANGER)
 	splat_color = color
 	_outer.color = color
@@ -66,6 +71,11 @@ func _physics_process(delta: float) -> void:
 	if not active:
 		return
 	velocity.y += fall_gravity * delta
+	if homing_time > 0.0 and Game.player:
+		homing_time -= delta
+		var to_pete: Vector2 = Game.player.global_position + Vector2(0, -50) - global_position
+		var diff := wrapf(to_pete.angle() - velocity.angle(), -PI, PI)
+		velocity = velocity.rotated(clampf(diff, -homing_turn * delta, homing_turn * delta))
 	position += velocity * delta
 	if orient:
 		rotation = velocity.angle()
@@ -103,6 +113,8 @@ static func _outline(shape: String, r: float) -> PackedVector2Array:
 				pts.append(Vector2(cos(a) * r * stretch, sin(a) * r * 0.8))
 		"feather":  # langer Federkiel
 			pts = PackedVector2Array([Vector2(r * 2.2, 0), Vector2(0, r * 0.7), Vector2(-r * 2.2, 0), Vector2(0, -r * 0.7)])
+		"plane":  # Papierflieger
+			pts = PackedVector2Array([Vector2(r * 1.8, 0), Vector2(-r * 1.2, r * 0.9), Vector2(-r * 0.6, 0), Vector2(-r * 1.2, -r * 0.9)])
 		"wave":  # Bodenwelle, halbe Ellipse
 			for i in 13:
 				var a := PI + PI * i / 12.0

@@ -47,9 +47,19 @@ func _ready() -> void:
 	_t = T.rest_time * 0.5
 
 
+## Aus einem Zahnrad geschleudert (Segment C).
+func launch(v: Vector2) -> void:
+	velocity = v
+	_state = S.AIR
+	awake = true
+
+
 func _physics_process(delta: float) -> void:
 	_tick_common()
 	if dead or not awake:
+		return
+	if Game.level and global_position.y > Game.level.kill_y:
+		die()
 		return
 	velocity.y = minf(velocity.y + T.gravity * delta, 1600.0)
 	match _state:

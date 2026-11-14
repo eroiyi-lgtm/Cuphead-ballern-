@@ -55,6 +55,10 @@ func start_level() -> void:
 
 ## Setzt nur Zustände zurück, lädt nichts neu. Ziel ≤ 0,5 s bis zur Kontrolle.
 func restart_level() -> void:
+	# Pausieren passiert im Prozess-Schritt; im Physik-Schritt zu entpausieren erzeugt in Godot 4.3
+	# Fehler in der Prozessliste. Deshalb Neustart immer außerhalb des Physik-Schritts.
+	if Engine.is_in_physics_frame():
+		await get_tree().process_frame
 	var t0 := Time.get_ticks_usec()
 	_hit_stop_token += 1
 	Engine.time_scale = 1.0

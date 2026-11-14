@@ -16,7 +16,11 @@ var hurtbox: Hurtbox
 var contact: Hitbox
 var attack_label: Label
 
+var _inkwell: Node2D
+var _upper: Node2D
 var _head: Node2D
+var _hurt_shape: CollisionShape2D
+var _pose_tween: Tween
 var _quill_arm: Node2D
 var _seal_arm: Node2D
 var _monocle: Polygon2D
@@ -34,6 +38,7 @@ func _ready() -> void:
 	var hs := RectangleShape2D.new()
 	hs.size = Vector2(320, 520)
 	hurtbox = Hurtbox.create(self, Layers.ENEMY_HURTBOX, hs, Vector2(0, -260), _on_hurt)
+	_hurt_shape = hurtbox.get_child(0) as CollisionShape2D
 	var cs := RectangleShape2D.new()
 	cs.size = Vector2(340, 300)
 	contact = Hitbox.create(self, Layers.PETE_HURTBOX, cs, Vector2(0, -150), 1)
@@ -82,6 +87,7 @@ func reset() -> void:
 	_seal_arm.position = Vector2(150, -330)
 	_monocle.visible = true
 	_monocle.position = Vector2.ZERO
+	_apply_pose(0, false)
 	_fx.set_shader_parameter(&"dissolve", 0.0)
 	_fx.set_shader_parameter(&"flash_amount", 0.0)
 	hurtbox.active = true
@@ -90,7 +96,12 @@ func reset() -> void:
 
 
 func mouth_position() -> Vector2:
-	return global_position + Vector2(-70, -430)
+	return _head.global_position + Vector2(-70, 15) * _upper.scale
+
+
+## Ursprung der Klecks-Spirale (Phase 3): Mitte des Kopfes.
+func spiral_origin() -> Vector2:
+	return _head.global_position
 
 
 func _physics_process(_delta: float) -> void:
@@ -124,7 +135,34 @@ func _on_attack(attack: BossAttack) -> void:
 
 func _on_phase_changed(index: int) -> void:
 	AudioDirector.play_sfx(&"phase_change")
+	Game.shake(10.0, 0.5)
+	_apply_pose(index, true)
 	Events.boss_phase_changed.emit(index)
+
+
+## Phase 1: thront im Tintenfass. Phase 2: steigt aus dem Fass und schwebt.
+## Phase 3: rammt die Feder in den Tisch, nur noch der riesige Kopf ist zu sehen.
+func _apply_pose(phase: int, animate: bool) -> void:
+	if _pose_tween:
+		_pose_tween.kill()
+	var target_pos: Vector2 = [Vector2.ZERO, Vector2(0, -200), Vector2(-60, 170)][phase]
+	var target_scale: Vector2 = [Vector2.ONE, Vector2.ONE, Vector2(1.5, 1.5)][phase]
+	var hurt_size: Vector2 = [Vector2(320, 520), Vector2(320, 840), Vector2(420, 620)][phase]
+	_inkwell.visible = phase != 2
+	attack_label.position.y = [-640.0, -880.0, -820.0][phase]
+	(_hurt_shape.shape as RectangleShape2D).size = hurt_size
+	_hurt_shape.position = Vector2(0, -hurt_size.y * 0.5)
+	if not animate:
+		_upper.position = target_pos
+		_upper.scale = target_scale
+		return
+	_pose_tween = create_tween()
+	_pose_tween.tween_property(_upper, "position", target_pos, 1.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	_pose_tween.parallel().tween_property(_upper, "scale", target_scale, 1.2)
+	if phase == 1:  # schweben
+		_pose_tween.tween_property(_upper, "position:y", target_pos.y - 24.0, 0.9).set_trans(Tween.TRANS_SINE)
+		_pose_tween.tween_property(_upper, "position:y", target_pos.y, 0.9).set_trans(Tween.TRANS_SINE)
+		_pose_tween.set_loops()
 
 
 func _on_rage() -> void:
@@ -173,10 +211,29 @@ func _play(anim: StringName, duration: float) -> void:
 			_anim.tween_property(_seal_arm, "position", Vector2(150, -520), duration).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 		&"attack_seal":
 			_anim.tween_property(_seal_arm, "position", Vector2(150, -330), 0.12)
+		&"telegraph_paper":  # faltet Papier
+			var steps := maxi(int(duration / 0.12), 2)
+			for i in steps:
+				_anim.tween_property(_quill_arm, "rotation", 0.6 if i % 2 == 0 else 0.0, duration / steps)
+		&"telegraph_wave":  # Fass blubbert, Kopf bläht
+			_anim.tween_property(_head, "scale", Vector2(1.1, 1.25), duration).set_trans(Tween.TRANS_ELASTIC)
+		&"telegraph_whistle":  # Pfeife
+			_anim.tween_property(_head, "rotation", -0.3, duration * 0.5)
+			_anim.tween_property(_head, "rotation", 0.0, duration * 0.5)
+		&"telegraph_spiral":  # Kopf rotiert, Lachen
+			_anim.tween_property(_head, "rotation", TAU, duration).set_trans(Tween.TRANS_QUAD)
+		&"telegraph_strike":  # holt mit der Feder aus
+			_anim.tween_property(_head, "rotation", 0.35, duration).set_trans(Tween.TRANS_BACK)
+		&"attack_strike":
+			_anim.tween_property(_head, "rotation", -0.2, 0.1)
+			_anim.tween_property(_head, "rotation", 0.0, 0.3)
 		&"intro":
 			_anim.tween_property(_head, "rotation", -0.12, duration * 0.25)
 			_anim.tween_property(_head, "rotation", 0.12, duration * 0.25)
 			_anim.tween_property(_head, "rotation", 0.0, duration * 0.25)
+		_:  # kein Clip für diesen Namen
+			_anim.kill()
+			_anim = null
 
 
 func _build_graybox() -> void:
@@ -184,13 +241,21 @@ func _build_graybox() -> void:
 	visual.name = "Visual"
 	add_child(visual)
 	# Tintenfass
-	visual.add_child(EnemyBase.poly([Vector2(-180, 0), Vector2(180, 0), Vector2(150, -280), Vector2(-150, -280)], Palette.INK))
-	visual.add_child(EnemyBase.poly([Vector2(-150, -150), Vector2(150, -150), Vector2(145, -200), Vector2(-145, -200)], Palette.BOSS_GOLD))
-	visual.add_child(EnemyBase.poly([Vector2(-90, -280), Vector2(90, -280), Vector2(80, -320), Vector2(-80, -320)], Palette.INK.lightened(0.15)))
+	_inkwell = Node2D.new()
+	_inkwell.use_parent_material = true
+	visual.add_child(_inkwell)
+	_inkwell.add_child(EnemyBase.poly([Vector2(-180, 0), Vector2(180, 0), Vector2(150, -280), Vector2(-150, -280)], Palette.INK))
+	_inkwell.add_child(EnemyBase.poly([Vector2(-150, -150), Vector2(150, -150), Vector2(145, -200), Vector2(-145, -200)], Palette.BOSS_GOLD))
+	_inkwell.add_child(EnemyBase.poly([Vector2(-90, -280), Vector2(90, -280), Vector2(80, -320), Vector2(-80, -320)], Palette.INK.lightened(0.15)))
+	# Oberkörper (Kopf + Arme), bewegt sich je Phase
+	_upper = Node2D.new()
+	_upper.use_parent_material = true
+	visual.add_child(_upper)
 	# Kopf: Federhalter-Spitze mit Gesicht, Perücke, Monokel
 	_head = Node2D.new()
+	_head.use_parent_material = true
 	_head.position = Vector2(0, -420)
-	visual.add_child(_head)
+	_upper.add_child(_head)
 	_head.add_child(EnemyBase.poly([Vector2(-80, 100), Vector2(80, 100), Vector2(0, -150)], Palette.BOSS_GOLD))
 	_head.add_child(EnemyBase.ellipse(Vector2(0, 10), Vector2(70, 80), Palette.PAPER))
 	for p in [Vector2(-75, -30), Vector2(-85, 30), Vector2(75, -30), Vector2(85, 30), Vector2(0, -80)]:
@@ -202,12 +267,14 @@ func _build_graybox() -> void:
 	# Federkiel-Arm
 	_quill_arm = Node2D.new()
 	_quill_arm.position = Vector2(-120, -330)
-	visual.add_child(_quill_arm)
+	_quill_arm.use_parent_material = true
+	_upper.add_child(_quill_arm)
 	_quill_arm.add_child(EnemyBase.poly([Vector2(0, 0), Vector2(-20, -10), Vector2(-60, -150), Vector2(-40, -150)], Color.WHITE))
 	_quill_arm.add_child(EnemyBase.ellipse(Vector2(0, 0), Vector2(16, 16), Color.WHITE))
 	# Siegel-Arm
 	_seal_arm = Node2D.new()
 	_seal_arm.position = Vector2(150, -330)
-	visual.add_child(_seal_arm)
+	_seal_arm.use_parent_material = true
+	_upper.add_child(_seal_arm)
 	_seal_arm.add_child(EnemyBase.ellipse(Vector2.ZERO, Vector2(16, 16), Color.WHITE))
 	_seal_arm.add_child(EnemyBase.ellipse(Vector2(0, -30), Vector2(26, 26), Palette.HERO.darkened(0.3)))

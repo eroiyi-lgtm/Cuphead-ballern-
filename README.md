@@ -1,7 +1,17 @@
 # Project Inkwell – Level 1 „Das Schreibtisch-Duell“
 
-Godot 4.3+, 2D auf Parallax-Ebenen, Android und iOS im Querformat. Dieser Stand ist **Phase 2**
-aus dem Architekturplan: Segment A „Bücherberg“ und Boss-Phase 1 „Die Audienz“ als spielbare Graybox.
+Godot 4.3+, 2D auf Parallax-Ebenen, Android und iOS im Querformat. Level 1 ist als **Graybox komplett
+spielbar**: vier Run-&-Gun-Segmente ohne Checkpoint und Sir Reginald mit allen drei Phasen.
+
+| Teil | Inhalt |
+|---|---|
+| A „Bücherberg“ | 3 gestaffelte Buchtürme, 4 Ink-Blobs einzeln |
+| B „Lineal-Brücke“ | Lineal in 3 Stücken über dem Tintensee (Sturz = 1 HP + Respawn am Brückenanfang), Pencil-Sprites in 2er-Gruppen |
+| C „Uhrwerk“ | 3 Zahnräder (Zähne = Plattformen, 40°/s), Kolben, Blobs springen aus den Zahnrädern |
+| D „Kippendes Tintenfass“ | Bodenflut alle 2,5 s, Federhalter-Steg als sicherer Weg, 6 Blobs + 4 Pencils |
+| Boss Phase 1 (1100 HP) | Tintenspucke, Federkiel-Erlass, Siegelstempel |
+| Boss Phase 2 (1000 HP) | Flut auf der rechten Bodenhälfte, 3 schwebende Bücher; Papierflieger-Staffel, Tintenwelle, Bleistift-Garde |
+| Boss Phase 3 (900 HP) | Klecks-Spirale, Federstoß in 3 Bahnen, Rage ab 30 % HP |
 
 ## Starten
 
@@ -24,10 +34,16 @@ godot --headless --path . --import
 godot --headless --path . --fixed-fps 60 res://debug/smoke_test.tscn
 ```
 
-Prüft Laufen (520 px/s), Sprunghöhe, variable Sprunghöhe, Jump Buffer, 8-Wege-Zielen, Feuerrate,
-Ink-Blob, Schaden/Unverwundbarkeit/Hit-Stop, Tod + Neustart (≤ 500 ms, Musik auf Takt 1),
-Arena-Übergang, Telegraphs ≥ 0,5 s, max. 2 Wiederholungen, Treffer in beide Richtungen, Sieg.
-Exit-Code = Anzahl Fehler.
+59 Prüfungen: Bewegungswerte, Jump Buffer, Zielen, Feuerrate, Schaden/Hit-Stop, Tod + Neustart
+(≤ 500 ms, Musik auf Takt 1), alle Attacken aller drei Phasen (Vorwarnung ≥ 0,5 s, max. 2
+Wiederholungen), Arena-Zustände je Phase, Rage, Stürze mit Respawn, Flut und sichere Plätze, Sieg.
+Zum Schluss läuft ein Bot vom Start bis in die Arena. Exit-Code = Anzahl Fehler (ca. 2 min).
+
+## Export
+
+`export_presets.cfg` enthält Android (arm64 + armv7, Vibrations-Recht für Haptik, Immersive Mode)
+und iOS (iPhone + iPad). Vor dem ersten Build: Export-Templates in Godot installieren, Paket-ID
+`com.example.projectinkwell` durch die eigene ersetzen, Keystore bzw. Apple-Team-ID eintragen.
 
 ## Struktur
 
@@ -45,10 +61,9 @@ Exit-Code = Anzahl Fehler.
 | `data/` | A1 + A3 | Alle Zahlen als `.tres` – nachjustieren ohne Code |
 | `debug/` | A1 | Debug-Overlay, Hitbox-Anzeige, Smoke-Test |
 
-`tools/build_resources.gd` erzeugt die `.tres`-Startwerte neu (überschreibt nur mit `-- --force`).
+## Noch offen
 
-## Bewusst noch offen (Phase 3+)
-
-Segmente B–D, Boss-Phasen 2 und 3, handgezeichnete Frames statt Graybox-Polygonen, echte
-Big-Band-Stems und Foley statt Platzhalter-Synthese, `paper_warp.gdshader`, Export-Presets
-für Android/iOS, Geräte-Playtests (60 fps auf Mittelklasse-Android und iPhone).
+Handgezeichnete Frames statt Graybox-Polygonen, echte Big-Band-Stems und Foley statt
+Platzhalter-Synthese, `paper_warp.gdshader` (braucht texturierte Hintergründe), Geräte-Playtests
+(60 fps auf Mittelklasse-Android und iPhone, Touch-Gefühl, Lock-Aim-Variante), Tuning der
+Schwierigkeit mit 5 externen Testern.

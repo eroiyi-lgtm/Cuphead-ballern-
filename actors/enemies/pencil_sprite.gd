@@ -11,6 +11,8 @@ enum S { HOVER, AIM, DIVE, STUCK, RISE }
 var _state := S.HOVER
 var _t := 0.0
 var _home_y := 0.0
+var _home_x := 0.0
+const LEASH := 700.0  ## Revier um den Spawnpunkt, kein Verfolgen durchs ganze Level
 var _dir := Vector2.DOWN
 var _tip: Polygon2D
 var _bob := 0.0
@@ -45,6 +47,7 @@ func _ready() -> void:
 	touch.size = Vector2(22, 84)
 	_setup_combat(hurt, Vector2(0, 0), touch, Vector2(0, 4), T.contact_damage)
 	_home_y = global_position.y
+	_home_x = global_position.x
 	_t = T.hover_time
 
 
@@ -59,6 +62,10 @@ func _physics_process(delta: float) -> void:
 			if side == 0.0:
 				side = 1.0
 			var target_x := pete_pos.x + side * maxf(pete_pos.y - _home_y, 120.0)
+			if Game.camera:  # im Bild bleiben, sonst kommt der Sturz aus dem Off
+				var cx := Game.camera.get_screen_center_position().x
+				target_x = clampf(target_x, cx - 860.0, cx + 860.0)
+			target_x = clampf(target_x, _home_x - LEASH, _home_x + LEASH)
 			_bob += delta
 			global_position.x = move_toward(global_position.x, target_x, T.hover_speed * delta)
 			global_position.y = _home_y + sin(_bob * 5.0) * 8.0

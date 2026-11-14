@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="BossAttack" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://data/classes/boss_attack.gd" id="1"]
+[ext_resource type="Script" path="res://actors/bosses/inkwell/patterns/blot_spiral.gd" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"blot_spiral"
+display_name = "Klecks-Spirale"
+weight = 1.0
+windup_time = 0.6
+active_time = 6.0
+recovery_time = 0.8
+telegraph_anim = &"telegraph_spiral"
+telegraph_sfx = &"boss_laugh"
+pattern = ExtResource("2")
+params = {
+"arms": 2,
+"deg_per_s": 90.0,
+"drop_speed": 360.0,
+"interval": 0.16
+}

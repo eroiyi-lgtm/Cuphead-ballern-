@@ -83,7 +83,7 @@ func _on_died() -> void:
 	_death_info.text = "Zeit %s  ·  Versuch %d" % [_fmt_time(Game.run_time), Game.attempt_deaths + 1]
 	_progress.queue_redraw()
 	_death.visible = true
-	get_tree().paused = true
+	get_tree().set_deferred(&"paused", true)  # nicht mitten im Timer-Callback pausieren
 
 
 func _on_restarted() -> void:
