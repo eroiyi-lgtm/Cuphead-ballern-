@@ -1,19 +1,25 @@
 extends Node
 ## Musik, Takt-Uhr, Übergänge auf Takt, SFX-Pool, Ducking, Grammophon-Stärke.
-## Phase 2: Musik und SFX sind synthetisierte Platzhalter. Die echten Stems (OGG) ersetzen nur
-## _music_loops/_sfx_streams; die Schnittstelle (request_state, play_sfx, beat) bleibt.
+## Musik: echte 1930er-Jazz-Titel (CC0, audio/music/level_01/LICENSE.md). Die Titel sind nicht als
+## Loop gebaut, deshalb blenden zwei Player ineinander über (Wechsel auf Takt, Neustart des Titels
+## kurz vor Ende). Fehlt eine Datei, springt der synthetische Platzhalter-Loop ein. SFX bleiben
+## synthetisierte Platzhalter, bis die Foley-Aufnahmen da sind.
 
 signal beat(beat_in_bar: int, bar: int)
 signal bar_started(bar: int)
 
 const MIX_RATE := 22050
 const BEATS_PER_BAR := 4
+## Zustand: [Datei, Tempo in BPM (gemessen)]
 const MUSIC_STATES := {
-	&"run": 168.0,
-	&"boss1": 184.0,
-	&"boss2": 196.0,
-	&"boss3": 208.0,
+	&"run": ["res://audio/music/level_01/run_swingin_safari.ogg", 122.0],
+	&"boss1": ["res://audio/music/level_01/boss1_bourbon_blues.ogg", 131.0],
+	&"boss2": ["res://audio/music/level_01/boss2_cool_cat_caper.ogg", 181.0],
+	&"boss3": ["res://audio/music/level_01/boss3_boogie_wonderland.ogg", 225.0],
 }
+const CROSSFADE := 0.6
+const END_FADE := 2.5
+const DANGER_BOOST_DB := 2.0
 ## name: [freq_start, freq_end, dauer_s, welle, lautstärke_db, max_gleichzeitig]
 const SFX := {
 	&"shot": [950.0, 420.0, 0.05, "square", -16.0, 4],
@@ -43,12 +49,13 @@ var bpm := 168.0
 var bar := 0
 var danger := 0
 
-var _music: AudioStreamPlayer
-var _danger_layer: AudioStreamPlayer
+var _music: AudioStreamPlayer        ## spielt gerade
+var _music_out: AudioStreamPlayer    ## blendet gerade aus
+var _fade_tween: Tween
 var _crackle: AudioStreamPlayer
 var _sfx_players: Array[AudioStreamPlayer] = []
 var _sfx_streams := {}
-var _music_loops := {}   # state -> [main, danger]
+var _music_streams := {}   # state -> AudioStream
 var _pending: StringName = &""
 var _t0_us := 0
 var _last_beat := -1
@@ -61,14 +68,15 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_ensure_buses()
 	_music = _make_player(&"Music")
-	_danger_layer = _make_player(&"Music")
+	_music_out = _make_player(&"Music")
 	_crackle = _make_player(&"Master")
 	for i in 12:
 		_sfx_players.append(_make_player(&"SFX"))
 	for key: StringName in SFX:
 		_sfx_streams[key] = _synth_sfx(SFX[key])
 	for s: StringName in MUSIC_STATES:
-		_music_loops[s] = [_synth_bar(MUSIC_STATES[s], false), _synth_bar(MUSIC_STATES[s], true)]
+		var path: String = MUSIC_STATES[s][0]
+		_music_streams[s] = load(path) if ResourceLoader.exists(path) else _synth_bar(MUSIC_STATES[s][1], false)
 	_crackle.stream = _synth_crackle()
 	_crackle.play()
 	apply_gramophone(SaveData.gramophone_level)
@@ -82,6 +90,11 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if not _music.playing:
 		return
+	# Titel ist kein Loop: kurz vor Ende von vorn beginnen, überblendet
+	var length := _music.stream.get_length()
+	if length > END_FADE * 2.0 and not (_music.stream is AudioStreamWAV) and _music.get_playback_position() > length - END_FADE:
+		_start_track(state, END_FADE)
+		return
 	var spb := 60.0 / bpm
 	var total := int((Time.get_ticks_usec() - _t0_us) / 1_000_000.0 / spb)
 	if total == _last_beat:
@@ -94,7 +107,9 @@ func _process(_delta: float) -> void:
 			return
 		bar += 1
 		bar_started.emit(bar)
-		_danger_layer.volume_db = 0.0 if danger >= 1 else -80.0
+		var target := DANGER_BOOST_DB if danger >= 1 else 0.0  # "brenzlig": Musik drängt nach vorn
+		if not is_equal_approx(_music.volume_db, target) and (_fade_tween == null or not _fade_tween.is_running()):
+			_music.volume_db = target
 	beat.emit(b, bar)
 
 
@@ -172,16 +187,31 @@ func _apply_state(new_state: StringName) -> void:
 	_pending = &""
 	if _death_tween:
 		_death_tween.kill()
+	_start_track(new_state, CROSSFADE if _music.playing else 0.0)
+
+
+## Startet den Titel eines Zustands auf Takt 1; der alte Titel blendet in `fade` Sekunden aus.
+func _start_track(new_state: StringName, fade: float) -> void:
 	state = new_state
-	bpm = MUSIC_STATES[new_state]
-	var loops: Array = _music_loops[new_state]
-	_music.stream = loops[0]
-	_danger_layer.stream = loops[1]
+	bpm = MUSIC_STATES[new_state][1]
+	if _fade_tween:
+		_fade_tween.kill()
+	var old := _music
+	_music = _music_out
+	_music_out = old
+	_music.stream = _music_streams[new_state]
 	_music.pitch_scale = 1.0
-	_music.volume_db = 0.0
-	_danger_layer.volume_db = 0.0 if danger >= 1 else -80.0
-	_music.play()
-	_danger_layer.play()
+	if fade > 0.0 and _music_out.playing:
+		_music.volume_db = -30.0
+		_music.play()
+		_fade_tween = create_tween().set_parallel()
+		_fade_tween.tween_property(_music, "volume_db", 0.0, fade)
+		_fade_tween.tween_property(_music_out, "volume_db", -60.0, fade)
+		_fade_tween.chain().tween_callback(_music_out.stop)
+	else:
+		_music_out.stop()
+		_music.volume_db = 0.0
+		_music.play()
 	_t0_us = Time.get_ticks_usec()
 	_last_beat = 0
 	bar = 1
@@ -196,15 +226,19 @@ func _on_boss_phase_changed(phase: int) -> void:
 func _on_player_died() -> void:
 	play_sfx(&"death")
 	_pending = &""
-	_death_tween = create_tween()
+	if _fade_tween:
+		_fade_tween.kill()
+	_music_out.stop()
+	_death_tween = create_tween()  # Plattenspieler bremst ab
 	_death_tween.tween_property(_music, "pitch_scale", 0.35, 0.7)
 	_death_tween.parallel().tween_property(_music, "volume_db", -40.0, 0.7)
-	_death_tween.parallel().tween_property(_danger_layer, "volume_db", -80.0, 0.3)
 
 
 func _stop_music_with(sfx: StringName) -> void:
+	if _fade_tween:
+		_fade_tween.kill()
 	_music.stop()
-	_danger_layer.stop()
+	_music_out.stop()
 	play_sfx(sfx)
 
 

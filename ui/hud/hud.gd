@@ -199,6 +199,7 @@ func _build_win() -> void:
 	v.add_child(_label("SIEG!", 120, Palette.BOSS_GOLD.darkened(0.2)))
 	_win_info = _label("", 44)
 	v.add_child(_win_info)
+	v.add_child(_label("Musik: Tom Feldmann (Old Cartoon Music Pack, CC0)", 24, Palette.INK.lightened(0.3)))
 	v.add_child(_button("Nochmal"))
 
 

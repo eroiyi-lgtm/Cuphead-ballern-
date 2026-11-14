@@ -34,7 +34,7 @@ godot --headless --path . --import
 godot --headless --path . --fixed-fps 60 res://debug/smoke_test.tscn
 ```
 
-59 Prüfungen: Bewegungswerte, Jump Buffer, Zielen, Feuerrate, Schaden/Hit-Stop, Tod + Neustart
+61 Prüfungen: Bewegungswerte, Jump Buffer, Zielen, Feuerrate, Schaden/Hit-Stop, Tod + Neustart
 (≤ 500 ms, Musik auf Takt 1), alle Attacken aller drei Phasen (Vorwarnung ≥ 0,5 s, max. 2
 Wiederholungen), Arena-Zustände je Phase, Rage, Stürze mit Respawn, Flut und sichere Plätze, Sieg.
 Zum Schluss läuft ein Bot vom Start bis in die Arena. Exit-Code = Anzahl Fehler (ca. 2 min).
@@ -70,6 +70,13 @@ als Zeichnung, Arme und Beine als Tusche-Schläuche, Bewegung „on twos“ mit 
 `fx/shaders/actor_fx.gdshader` lässt die Linien zittern (Boiling Lines), `paper_warp`-Ersatz für die
 Hintergründe ist `fx/shaders/paper_wash.gdshader` (Aquarell-Flecken, entsättigt).
 Vor jeder Veröffentlichung trotzdem: Bild- und Marken-Check.
+
+## Musik
+
+Echte 1930er-Jazz-Titel aus Tom Feldmanns „Old Cartoon Music Pack“ (kostenlose Demo-Titel, CC0),
+siehe `audio/music/level_01/LICENSE.md` und `CREDITS.md`. Run-Teil, Boss-Phase 1, 2 und 3 haben je
+einen eigenen Titel mit steigendem Tempo; Wechsel passieren auf dem nächsten Takt mit Überblendung.
+Für mehr Abwechslung lohnt das volle Paket (30 Titel, ab 5,99 $).
 
 ## Noch offen
 

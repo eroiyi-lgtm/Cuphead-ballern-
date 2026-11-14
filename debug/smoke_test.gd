@@ -20,6 +20,7 @@ func _ready() -> void:
 	Game.god_mode = true
 	_check(Game.running, "Level läuft nach der Titelkarte")
 	_check(pete.is_on_floor(), "Pete steht am Start auf dem Boden")
+	_check(AudioDirector._music.stream is AudioStreamOggVorbis and AudioDirector._music.playing, "Echte Musik läuft (OGG, Run-Titel)")
 	_check(_alive_enemies(level, Level01.SEG_B) == 4, "Segment A: 4 Ink-Blobs (%d)" % _alive_enemies(level, Level01.SEG_B))
 	_check(_alive_enemies(level) == 20, "Segmente A–D: 10 Blobs + 10 Pencils (%d)" % _alive_enemies(level))
 
@@ -103,6 +104,7 @@ func _ready() -> void:
 	while AudioDirector.state != &"boss1" and Time.get_ticks_msec() - t0 < 3000:
 		await get_tree().physics_frame
 	_check(AudioDirector.state == &"boss1", "Musik wechselt auf Takt zu Boss Phase 1")
+	_check(AudioDirector._music.stream.resource_path.ends_with("boss1_bourbon_blues.ogg"), "Boss-Titel überblendet")
 
 	await _frames(60 * 40)
 	var ids := {}
