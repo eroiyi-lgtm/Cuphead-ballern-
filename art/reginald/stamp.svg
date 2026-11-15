@@ -1,6 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="340" height="340" viewBox="0 0 340 340">
 <defs><linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ecd08a"/><stop offset="1" stop-color="#8e6c24"/></linearGradient></defs>
-<g transform="translate(170,320) scale(2)" stroke="#0b0c10" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+<g transform="translate(2.6,2.6)"><g transform="translate(170,320) scale(2)" stroke="#0b0c10" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+ <path d="M-22 -150 C-30 -150 -32 -130 -24 -120 L-14 -70 L14 -70 L24 -120 C32 -130 30 -150 22 -150 Z" fill="#0b0c10"/>
+ <ellipse cx="0" cy="-150" rx="22" ry="10" fill="#0b0c10"/>
+ 
+ <path d="M-50 -70 L50 -70 L60 -40 L-60 -40 Z" fill="#0b0c10"/>
+ <path d="M-78 -40 L78 -40 C84 -40 84 -10 78 -6 L-78 -6 C-84 -10 -84 -40 -78 -40 Z" fill="#0b0c10"/>
+ <path d="M-76 -6 C-80 6 80 6 76 -6 Z" fill="#0b0c10"/>
+ <path d="M-40 -26 L40 -26" stroke-width="3"/>
+</g></g><g transform="translate(170,320) scale(2)" stroke="#0b0c10" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
  <path d="M-22 -150 C-30 -150 -32 -130 -24 -120 L-14 -70 L14 -70 L24 -120 C32 -130 30 -150 22 -150 Z" fill="#8a5a34"/>
  <ellipse cx="0" cy="-150" rx="22" ry="10" fill="#a8744a"/>
  <path d="M-12 -140 C-14 -120 -10 -100 -8 -80" fill="none" stroke="#c99a6a" stroke-width="3" opacity="0.7"/>

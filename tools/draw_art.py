@@ -13,7 +13,24 @@ HERO = "#c8402e"
 BLUE = "#2e4a7a"
 
 
+WEIGHTED = ("pete/", "enemies/", "reginald/")
+
+
+def weight_copy(body, d=2.6):
+    """Linien-Gewicht nach der klassischen Tusche-Regel: eine tintenschwarze Kopie der Formen,
+    leicht nach unten rechts versetzt, liegt unter der Zeichnung. Ergebnis: Konturen sind auf der
+    Schattenseite dick und auf der Lichtseite dünn. Halbtransparente Glanzlichter fallen weg."""
+    import re
+    c = re.sub(r'<(path|ellipse|circle|rect)[^>]*opacity="0?\.\d+"[^>]*/>', "", body)
+    c = re.sub(r'fill="(?!none)[^"]*"', f'fill="{DEEP}"', c)
+    c = re.sub(r'stroke="(?!none)[^"]*"', f'stroke="{DEEP}"', c)
+    c = re.sub(r'<g clip-path[^>]*>.*?</g>', "", c, flags=re.S)
+    return f'<g transform="translate({d},{d})">{c}</g>'
+
+
 def svg(path, w, h, body, defs=""):
+    if path.startswith(WEIGHTED) and "fg/" not in path:
+        body = weight_copy(body) + body
     with open(os.path.join(ROOT, path), "w") as f:
         f.write(f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}">\n')
         if defs:

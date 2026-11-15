@@ -25,6 +25,14 @@ Ziel: das Gefühl eines handgezeichneten 1930er-Kinocartoons, mit **komplett eig
 | Palette | Pergament `#E9DCC0`, Tinte `#1C1F2A`, Zinnober `#C8402E`, Altgold `#B8913A`, Walnuss `#7A4E2D`, Geschosse `#3B2C5E` mit hellem Kern `#F2E6C9`, Luft `#8FA9A0` |
 | Bewegung | „on twos“: 12 Posen pro Sekunde (`floor(t * 12) / 12`), nicht flüssig interpoliert |
 
+## Recherchierte Techniken (eingebaut)
+
+- **Linien-Gewicht:** `weight_copy()` in `tools/draw_art.py` legt eine tintenschwarze, nach unten rechts versetzte Kopie unter jede Figur. Konturen werden auf der Schattenseite dick, auf der Lichtseite dünn (Offset-Outline-Prinzip aus der Inkscape-Praxis). Gilt automatisch für `art/pete`, `art/enemies`, `art/reginald`.
+- **Squash & Stretch nach Tempo:** Pete streckt sich beim schnellen Fall, staucht beim Landen (`pete_rig.gd`).
+- **Overlapping Action:** Der Kopf schwingt der Bewegung verzögert hinterher, Bewegungen laufen in Bögen.
+- **Verjüngte Schläuche:** Arme und Beine sind am Rumpf kräftig und zu Hand und Fuß schlanker (`width_curve`).
+- **Studio-Arbeitsweise der 1930er:** mit Tusche auf Papier, digital koloriert, Hintergründe Schicht für Schicht als Aquarell; bei uns `paper_wash.gdshader` und Zonen-Ebenen.
+
 ## Bildausschnitt
 
 - Kamera nah dran: `ZOOM_RUN = 1.35`, `ZOOM_ARENA = 1.2` (`levels/level_01_desk/level_01.gd`).

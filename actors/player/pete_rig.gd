@@ -28,6 +28,8 @@ var _glove_gun: Sprite2D
 var _torso: Sprite2D
 var _head: Sprite2D
 var _t := 0.0
+var _head_lag := 0.0        ## Overlapping Action: der Kopf schwingt der Bewegung hinterher
+var _stretch := Vector2.ONE
 
 
 func _init() -> void:
@@ -133,6 +135,11 @@ func _limb(line: Line2D, a: Vector2, b: Vector2, bend: float, tq: float, seed: f
 func _line() -> Line2D:
 	var l := Line2D.new()
 	l.width = LIMB_WIDTH
+	var taper := Curve.new()  # Schlauch: kräftig am Rumpf, schlanker zu Hand und Fuß
+	taper.add_point(Vector2(0.0, 1.0))
+	taper.add_point(Vector2(0.6, 0.9))
+	taper.add_point(Vector2(1.0, 0.7))
+	l.width_curve = taper
 	l.default_color = Palette.INK
 	l.begin_cap_mode = Line2D.LINE_CAP_ROUND
 	l.end_cap_mode = Line2D.LINE_CAP_ROUND
