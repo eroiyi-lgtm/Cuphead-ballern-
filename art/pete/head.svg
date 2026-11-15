@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="160" height="150" viewBox="0 0 160 150">
-<defs><linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eceef0"/><stop offset="1" stop-color="#868c95"/></linearGradient><radialGradient id="skin" cx="0.4" cy="0.35" r="0.75"><stop offset="0" stop-color="#fff8e8"/><stop offset="1" stop-color="#e0cca4"/></radialGradient><linearGradient id="brass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2c06a"/><stop offset="1" stop-color="#94712a"/></linearGradient></defs>
+<defs><linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eceef0"/><stop offset="1" stop-color="#868c95"/></linearGradient><radialGradient id="skin" cx="0.4" cy="0.35" r="0.75"><stop offset="0" stop-color="#fff8e8"/><stop offset="1" stop-color="#e0cca4"/></radialGradient><linearGradient id="brass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e2c06a"/><stop offset="1" stop-color="#94712a"/></linearGradient><clipPath id="faceShade"><path d="M44 96 C50 118 68 128 88 128 C70 126 54 116 48 96 Z"/></clipPath></defs>
 <g stroke="#1c1f2a" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
  <path d="M44 70 C30 62 16 50 2 54 C10 62 12 70 6 80 C20 76 32 80 44 78 Z" fill="#c8402e"/>
  <path d="M44 76 C36 86 26 96 10 100 C18 90 20 84 18 76 Z" fill="#9c2c1c"/>
@@ -17,5 +17,9 @@
  <circle cx="125" cy="108" r="3" fill="#1c1f2a" stroke="none"/>
  <circle cx="84" cy="110" r="7" fill="#e3a07a" opacity="0.55" stroke="none"/>
  <path d="M92 116 C99 126 110 126 116 117" fill="none" stroke-width="4"/>
+ <path d="M48 104 C54 120 70 128 86 128 C66 126 54 116 50 102 Z" fill="#c9ad7c" opacity="0.7" stroke="none"/>
+ <g clip-path="url(#faceShade)" stroke-width="1.6" opacity="0.5"><path d="M4 132 L40 96" fill="none"/><path d="M10 132 L46 96" fill="none"/><path d="M16 132 L52 96" fill="none"/><path d="M22 132 L58 96" fill="none"/><path d="M28 132 L64 96" fill="none"/><path d="M34 132 L70 96" fill="none"/><path d="M40 132 L76 96" fill="none"/><path d="M46 132 L82 96" fill="none"/><path d="M52 132 L88 96" fill="none"/><path d="M58 132 L94 96" fill="none"/><path d="M64 132 L100 96" fill="none"/><path d="M70 132 L106 96" fill="none"/><path d="M76 132 L112 96" fill="none"/><path d="M82 132 L118 96" fill="none"/><path d="M88 132 L124 96" fill="none"/><path d="M94 132 L130 96" fill="none"/></g>
+ <path d="M44 66 C60 74 100 74 116 66 L118 72 C100 80 60 80 42 72 Z" fill="#6b7078" opacity="0.45" stroke="none"/>
+ <ellipse cx="96" cy="34" rx="7" ry="4" fill="#fff" opacity="0.8" stroke="none"/>
 </g>
 </svg>

@@ -1,18 +1,42 @@
 class_name ParallaxDesk
-## 6 Parallax-Ebenen (Ebene 3 = Spielebene im Level selbst). Phase 2: Skizzen-Platzhalter.
+## Parallax-Ebenen (Ebene 3 = Spielebene im Level selbst). Ferne Ebenen sind Zonen pro Abschnitt
+## (ZoneLayer), damit Bücherberg, Lineal-Brücke, Uhrwerk, Tintenfass und Arena eigene Kulissen haben.
 ## Hintergründe ohne harte Outlines und entsättigt, damit Figuren und Geschosse vorne lesbar bleiben.
 ## Screen Shake wirkt über scroll_scale automatisch stärker auf nahe Ebenen (2.5D-Tiefe).
 
 
+const SEG_B := 3900.0
+const SEG_C := 6300.0
+const SEG_D := 8800.0
+const ARENA := 11500.0
+
+
 static func build_background(level: Node2D) -> void:
 	_wall_layer(level)
-	_far_layer(level)
+	_far_layer(level)        # A: Bücherregal + Globus
+	_far_b(level)            # B: Briefständer, Sanduhr, Kerze
+	_far_c(level)            # C: Uhrwerk-Wand
+	_far_d(level)            # D: Tintenregal
+	_far_arena(level)        # Arena: Bühne mit Samtvorhang
 	_mid_layer(level)
 
 
 static func build_foreground(level: Node2D) -> void:
 	_near_layer(level)
 	_vignette_layer(level)
+
+
+static func _zone(level: Node2D, layer_name: String, factor: float, repeat_w: float, z: int, from_x: float, to_x: float) -> ZoneLayer:
+	var p := ZoneLayer.new()
+	p.name = layer_name
+	p.scroll_scale = Vector2(factor, 1.0)
+	p.repeat_size = Vector2(repeat_w, 0)
+	p.repeat_times = 4 if repeat_w > 0.0 else 1
+	p.z_index = z
+	p.zone_from = from_x
+	p.zone_to = to_x
+	level.add_child(p)
+	return p
 
 
 static func _layer(level: Node2D, layer_name: String, factor: float, repeat_w: float, z: int) -> Parallax2D:
@@ -46,7 +70,7 @@ static func _wall_layer(level: Node2D) -> void:
 
 ## Ebene 1 – Fern (0,2): Bücherregal, Globus dreht
 static func _far_layer(level: Node2D) -> void:
-	var p := _layer(level, "L1_Far", 0.2, 2000.0, -40)
+	var p := _zone(level, "L1_Far_A", 0.2, 2000.0, -40, -INF, SEG_B)
 	p.add_child(_sprite(preload("res://art/bg/bookshelf.svg"), Vector2(390, 580), 1.0))
 	var globe := _sprite(preload("res://art/bg/globe.svg"), Vector2(1300, 640), 1.0)
 	p.add_child(globe)
@@ -56,17 +80,53 @@ static func _far_layer(level: Node2D) -> void:
 	_wash(p)
 
 
-## Ebene 2 – Mitte (0,45): Lampe pendelt, Wecker tickt mit Gesicht, Briefmarken
+## Fern-Zone B "Lineal-Brücke": Schreibtisch-Kram im Gegenlicht
+static func _far_b(level: Node2D) -> void:
+	var p := _zone(level, "L1_Far_B", 0.2, 1800.0, -40, SEG_B, SEG_C)
+	p.add_child(_sprite(preload("res://art/bg/letter_rack.svg"), Vector2(420, 760), 1.8))
+	p.add_child(_sprite(preload("res://art/bg/hourglass.svg"), Vector2(1050, 700), 1.6))
+	p.add_child(_sprite(preload("res://art/bg/candle.svg"), Vector2(1450, 690), 1.5))
+	p.add_child(_rect(Rect2(0, 900, 1800, 40), Color("6e5236")))
+	_wash(p)
+
+
+## Fern-Zone C "Uhrwerk": Messing-Zahnräder hinter dem Holz, langsam drehend
+static func _far_c(level: Node2D) -> void:
+	var p := _zone(level, "L1_Far_C", 0.2, 1400.0, -40, SEG_C, SEG_D)
+	var wall := _sprite(preload("res://art/bg/clockwork_wall.svg"), Vector2(700, 500), 1.0)
+	p.add_child(wall)
+	var sway := wall.create_tween().set_loops()
+	sway.tween_property(wall, "position:y", 494.0, 0.5)
+	sway.tween_property(wall, "position:y", 500.0, 0.5)
+	_wash(p)
+
+
+## Fern-Zone D "Kippendes Tintenfass": Regal voller Tintenflaschen, Siegel und Briefe
+static func _far_d(level: Node2D) -> void:
+	var p := _zone(level, "L1_Far_D", 0.2, 1300.0, -40, SEG_D, ARENA)
+	p.add_child(_sprite(preload("res://art/bg/ink_shelf.svg"), Vector2(650, 520), 1.0))
+	_wash(p)
+
+
+## Arena: kleine Bühne mit Samtvorhang und Scheinwerfer – Reginalds Audienz
+static func _far_arena(level: Node2D) -> void:
+	var p := _zone(level, "L1_Far_Arena", 0.2, 0.0, -45, ARENA, INF)
+	p.add_child(_sprite(preload("res://art/bg/stage.svg"), Vector2(11900.0 * 0.2 + 960.0, 520), 1.0))
+	_wash(p)
+
+
+## Ebene 2 – Mitte (0,45): Lampe pendelt, Wecker tickt, Sanduhr, Kerze – lange Folge statt kurzer Wiederholung
 static func _mid_layer(level: Node2D) -> void:
-	var p := _layer(level, "L2_Mid", 0.45, 1800.0, -30)
-	var lamp := Node2D.new()
-	lamp.position = Vector2(500, -20)
-	p.add_child(lamp)
-	lamp.add_child(_rect(Rect2(-4, 0, 8, 210), Color("6b5a44")))
-	lamp.add_child(_sprite(preload("res://art/bg/lamp.svg"), Vector2(0, 280), 1.0))
-	var swing := lamp.create_tween().set_loops()
-	swing.tween_property(lamp, "rotation", 0.1, 1.8).set_trans(Tween.TRANS_SINE)
-	swing.tween_property(lamp, "rotation", -0.1, 1.8).set_trans(Tween.TRANS_SINE)
+	var p := _zone(level, "L2_Mid", 0.45, 3600.0, -30, -INF, ARENA)
+	for lx in [500.0, 2300.0]:
+		var lamp := Node2D.new()
+		lamp.position = Vector2(lx, -20)
+		p.add_child(lamp)
+		lamp.add_child(_rect(Rect2(-4, 0, 8, 210), Color("6b5a44")))
+		lamp.add_child(_sprite(preload("res://art/bg/lamp.svg"), Vector2(0, 280), 1.0))
+		var swing := lamp.create_tween().set_loops()
+		swing.tween_property(lamp, "rotation", 0.1, 1.8).set_trans(Tween.TRANS_SINE)
+		swing.tween_property(lamp, "rotation", -0.1, 1.8).set_trans(Tween.TRANS_SINE)
 	var clock := _sprite(preload("res://art/bg/clock.svg"), Vector2(1300, 700), 1.0)
 	p.add_child(clock)
 	var hand := _rect(Rect2(-5, -100, 10, 100), Color("5a4a3a"))
@@ -78,30 +138,27 @@ static func _mid_layer(level: Node2D) -> void:
 	var wobble := clock.create_tween().set_loops()
 	wobble.tween_property(clock, "rotation", 0.03, 0.25)
 	wobble.tween_property(clock, "rotation", -0.03, 0.25)
-	for i in 3:
-		var stamp := _rect(Rect2(900 + i * 90, 380 + i * 30, 70, 90), Color("b8a27e"))
-		p.add_child(stamp)
-		p.add_child(_rect(Rect2(908 + i * 90, 388 + i * 30, 54, 74), [Color("8fa9a0"), Color("c9a07a"), Color("9c8aa8")][i]))
+	p.add_child(_sprite(preload("res://art/bg/hourglass.svg"), Vector2(3000, 760), 1.0))
+	p.add_child(_sprite(preload("res://art/bg/candle.svg"), Vector2(1900, 760), 0.9))
 	_wash(p)
 
 
-## Ebene 4 – Nah-Vordergrund (1,3): Radiergummi-Krümel, Büroklammern
+## Ebene 4 – Nah-Vordergrund (1,3): Radiergummi-Krümel, Bleistiftspäne, Büroklammer – dunkel und sparsam
 static func _near_layer(level: Node2D) -> void:
-	var p := _layer(level, "L4_Near", 1.3, 1600.0, 20)
-	for i in 6:
-		p.add_child(_circle(Vector2(120 + i * 270, 1060 - (i % 2) * 16), 22 + (i % 3) * 8, Color("a8807a")))
-	p.add_child(_rect(Rect2(700, 1040, 160, 14), Color("8f969c")))
+	var p := _layer(level, "L4_Near", 1.3, 2600.0, 20)
+	p.add_child(_sprite(preload("res://art/fg/crumbs.svg"), Vector2(300, 1050), 1.0))
+	p.add_child(_sprite(preload("res://art/fg/shavings.svg"), Vector2(1250, 1052), 1.0))
+	p.add_child(_sprite(preload("res://art/fg/paperclip.svg"), Vector2(2050, 1060), 0.9))
+	p.modulate = Color(0.55, 0.45, 0.4, 1.0)
 
 
-## Ebene 5 – Vignetten-Vordergrund (1,6): unscharfe Bleistiftspitzen am Rand
+## Ebene 5 – Vignetten-Vordergrund (1,6): riesige, unscharf-dunkle Bleistiftspitze, selten vorbeiwischend
 static func _vignette_layer(level: Node2D) -> void:
-	var p := _layer(level, "L5_Vignette", 1.6, 3000.0, 30)
-	var tip := _poly([Vector2(0, 1080), Vector2(160, 1080), Vector2(60, 820)], Color(Palette.INK, 0.35))
-	tip.position = Vector2(400, 0)
+	var p := _layer(level, "L5_Vignette", 1.6, 5200.0, 30)
+	var tip := _sprite(preload("res://art/enemies/pencil.svg"), Vector2(900, 1080), 3.2)
+	tip.rotation = -2.6
 	p.add_child(tip)
-	var tip2 := _poly([Vector2(0, 1080), Vector2(200, 1080), Vector2(120, 760)], Color(Palette.WALNUT, 0.35))
-	tip2.position = Vector2(2100, 0)
-	p.add_child(tip2)
+	p.modulate = Color(0.12, 0.1, 0.1, 0.55)
 
 
 ## Aquarell-Material für eine Hintergrund-Ebene, alle Kinder erben es.
