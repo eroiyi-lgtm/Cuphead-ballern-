@@ -14,11 +14,15 @@ const SEG_C := 6300.0
 const SEG_D := 8800.0
 const GATE_X := 11500.0           ## Briefbeschwerer am Ende von D
 const ARENA_LEFT := 11900.0
-const ARENA_RIGHT := 13820.0
+const ARENA_RIGHT := 13500.0      ## 1600 breit: passt bei ZOOM_ARENA ganz ins Bild
 const BOSS_X := ARENA_RIGHT - 260.0
 const PLAY_RIGHT := ARENA_RIGHT - 450.0  ## unsichtbare Wand vor dem Tintenfass
 const KILL_Y := 1100.0
-const RUN_WEIGHT := 0.3           ## Anteil des Run-Teils an der Fortschrittsleiste
+const RUN_WEIGHT := 0.3
+## Bildausschnitt: näher dran als 1:1, Boden im unteren Bilddrittel (klassischer Run-&-Gun-Rahmen)
+const ZOOM_RUN := 1.35
+const ZOOM_ARENA := 1.2
+const FLOOR_SCREEN := 0.86        ## Boden bei 86 % der Bildhöhe           ## Anteil des Run-Teils an der Fortschrittsleiste
 
 ## Boden mit Lücken für Tintensee (B) und Zahnrad-Grube (C). [x_von, x_bis]
 const FLOOR_PIECES := [[-400.0, 4300.0], [6300.0, 6900.0], [8800.0, ARENA_RIGHT + 1000.0]]
@@ -116,7 +120,7 @@ func _ready() -> void:
 
 func _physics_process(_delta: float) -> void:
 	if not in_arena:
-		camera.position = Vector2(maxf(pete.global_position.x + 160.0, 960.0), 540.0)
+		camera.position = Vector2(maxf(pete.global_position.x + 140.0, _half_width(ZOOM_RUN)), _center_y(ZOOM_RUN))
 		if not gate_open and pete.global_position.x > GATE_X - 320.0:
 			open_gate()
 		if gate_open and pete.global_position.x > ARENA_LEFT + 140.0:
@@ -222,8 +226,9 @@ func _enter_arena() -> void:
 	camera.position_smoothing_enabled = false
 	camera.position = from
 	_arena_tween = create_tween()
-	_arena_tween.tween_property(camera, "position", Vector2((ARENA_LEFT + ARENA_RIGHT) * 0.5, 540.0), 1.2) \
+	_arena_tween.tween_property(camera, "position", Vector2((ARENA_LEFT + ARENA_RIGHT) * 0.5, _center_y(ZOOM_ARENA)), 1.2) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	_arena_tween.parallel().tween_property(camera, "zoom", Vector2.ONE * ZOOM_ARENA, 1.2)
 	_arena_tween.tween_callback(boss.begin_fight)
 	AudioDirector.request_state(&"boss1")
 	Events.boss_arena_entered.emit()
@@ -231,8 +236,19 @@ func _enter_arena() -> void:
 
 func _place_camera_at_start() -> void:
 	camera.position_smoothing_enabled = true
-	camera.position = Vector2(maxf(SPAWN.x + 160.0, 960.0), 540.0)
+	camera.zoom = Vector2.ONE * ZOOM_RUN
+	camera.position = Vector2(maxf(SPAWN.x + 140.0, _half_width(ZOOM_RUN)), _center_y(ZOOM_RUN))
 	camera.reset_smoothing()
+
+
+## Kameramitte so, dass der Boden bei FLOOR_SCREEN der sichtbaren Höhe liegt.
+func _center_y(zoom: float) -> float:
+	var h := get_viewport().get_visible_rect().size.y / zoom
+	return FLOOR_Y - h * (FLOOR_SCREEN - 0.5)
+
+
+func _half_width(zoom: float) -> float:
+	return get_viewport().get_visible_rect().size.x / zoom * 0.5
 
 
 func _spawn_enemies() -> void:

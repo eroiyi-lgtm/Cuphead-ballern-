@@ -148,7 +148,7 @@ func _on_phase_changed(index: int) -> void:
 func _apply_pose(phase: int, animate: bool) -> void:
 	if _pose_tween:
 		_pose_tween.kill()
-	var target_pos: Vector2 = [Vector2.ZERO, Vector2(0, -200), Vector2(-60, 170)][phase]
+	var target_pos: Vector2 = [Vector2.ZERO, Vector2(0, -150), Vector2(-60, 170)][phase]
 	var target_scale: Vector2 = [Vector2.ONE, Vector2.ONE, Vector2(1.5, 1.5)][phase]
 	var hurt_size: Vector2 = [Vector2(320, 520), Vector2(320, 840), Vector2(420, 620)][phase]
 	_inkwell.visible = phase != 2
