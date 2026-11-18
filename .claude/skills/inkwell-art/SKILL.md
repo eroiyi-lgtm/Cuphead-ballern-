@@ -35,9 +35,11 @@ Ziel: das Gefühl eines handgezeichneten 1930er-Kinocartoons, mit **komplett eig
 
 ## Bildausschnitt
 
-- Kamera nah dran: `ZOOM_RUN = 1.35`, `ZOOM_ARENA = 1.2` (`levels/level_01_desk/level_01.gd`).
-- Der Boden liegt bei 86 % der Bildhöhe (`FLOOR_SCREEN`), Pete ist ca. 15 % der Bildhöhe groß.
-- Die Boss-Arena muss bei `ZOOM_ARENA` komplett ins Bild passen (aktuell 1600 px breit).
+- Kamera nah dran: `ZOOM_RUN = 1.8`, `ZOOM_ARENA = 1.5` (`levels/level_01_desk/level_01.gd`).
+- Boden bei 82 % der Bildhöhe im Run-Teil, 90 % in der Arena; Pete ist ca. 20 % der Bildhöhe groß.
+- Die Boss-Arena muss bei `ZOOM_ARENA` komplett ins Bild passen (aktuell 1280 px breit).
+- Gegner dürfen nur im sichtbaren Bereich schweben (Pencil-Clamp an die Kamera), nichts greift aus dem Off an.
+- Touch-Knöpfe: Feuer Ø 250 px, Sprung Ø 190 px, Joystick-Radius 150 px (bei 1080p).
 - Jeder Abschnitt hat eine eigene Fern-Kulisse (`ZoneLayer`), damit sich nichts sichtbar wiederholt.
 
 ## Arbeitsablauf

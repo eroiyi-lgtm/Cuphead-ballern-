@@ -111,7 +111,7 @@ static func _far_d(level: Node2D) -> void:
 ## Arena: kleine Bühne mit Samtvorhang und Scheinwerfer – Reginalds Audienz
 static func _far_arena(level: Node2D) -> void:
 	var p := _zone(level, "L1_Far_Arena", 0.2, 0.0, -45, ARENA, INF)
-	p.add_child(_sprite(preload("res://art/bg/stage.svg"), Vector2(11900.0 * 0.2 + 930.0, 470), 0.85))
+	p.add_child(_sprite(preload("res://art/bg/stage.svg"), Vector2(11900.0 * 0.2 + 900.0, 470), 0.7))
 	_wash(p)
 
 

@@ -14,15 +14,16 @@ const SEG_C := 6300.0
 const SEG_D := 8800.0
 const GATE_X := 11500.0           ## Briefbeschwerer am Ende von D
 const ARENA_LEFT := 11900.0
-const ARENA_RIGHT := 13500.0      ## 1600 breit: passt bei ZOOM_ARENA ganz ins Bild
+const ARENA_RIGHT := 13180.0      ## 1280 breit: passt bei ZOOM_ARENA ganz ins Bild
 const BOSS_X := ARENA_RIGHT - 260.0
 const PLAY_RIGHT := ARENA_RIGHT - 450.0  ## unsichtbare Wand vor dem Tintenfass
 const KILL_Y := 1100.0
 const RUN_WEIGHT := 0.3
 ## Bildausschnitt: näher dran als 1:1, Boden im unteren Bilddrittel (klassischer Run-&-Gun-Rahmen)
-const ZOOM_RUN := 1.35
-const ZOOM_ARENA := 1.2
-const FLOOR_SCREEN := 0.86        ## Boden bei 86 % der Bildhöhe           ## Anteil des Run-Teils an der Fortschrittsleiste
+const ZOOM_RUN := 1.8             ## nah dran: Pete ca. 20 % der Bildhöhe
+const ZOOM_ARENA := 1.5
+const FLOOR_SCREEN_RUN := 0.82     ## Boden bei 82 % der Bildhöhe im Run-Teil
+const FLOOR_SCREEN_ARENA := 0.9    ## im Bosskampf tiefer, damit Reginald ganz ins Bild passt
 
 ## Boden mit Lücken für Tintensee (B) und Zahnrad-Grube (C). [x_von, x_bis]
 const FLOOR_PIECES := [[-400.0, 4300.0], [6300.0, 6900.0], [8800.0, ARENA_RIGHT + 1000.0]]
@@ -49,8 +50,8 @@ const BLOB_SPAWNS := [
 	Vector2(10850, FLOOR_Y), Vector2(11200, FLOOR_Y),
 ]
 const PENCIL_SPAWNS := [
-	Vector2(4750, 380), Vector2(4890, 380), Vector2(5500, 360), Vector2(5640, 360), Vector2(6150, 400), Vector2(6290, 400),
-	Vector2(9800, 360), Vector2(9940, 360), Vector2(10700, 360), Vector2(10840, 360),
+	Vector2(4750, 520), Vector2(4890, 520), Vector2(5500, 510), Vector2(5640, 510), Vector2(6150, 530), Vector2(6290, 530),
+	Vector2(9800, 500), Vector2(9940, 500), Vector2(10700, 500), Vector2(10840, 500),
 ]
 const BOOK_COLORS := [Color("7b2d26"), Color("2f5233"), Color("2e4a7a"), Color("8a6d3b")]
 
@@ -120,7 +121,7 @@ func _ready() -> void:
 
 func _physics_process(_delta: float) -> void:
 	if not in_arena:
-		camera.position = Vector2(maxf(pete.global_position.x + 140.0, _half_width(ZOOM_RUN)), _center_y(ZOOM_RUN))
+		camera.position = Vector2(maxf(pete.global_position.x + 120.0, _half_width(ZOOM_RUN)), _center_y(ZOOM_RUN, FLOOR_SCREEN_RUN))
 		if not gate_open and pete.global_position.x > GATE_X - 320.0:
 			open_gate()
 		if gate_open and pete.global_position.x > ARENA_LEFT + 140.0:
@@ -226,7 +227,7 @@ func _enter_arena() -> void:
 	camera.position_smoothing_enabled = false
 	camera.position = from
 	_arena_tween = create_tween()
-	_arena_tween.tween_property(camera, "position", Vector2((ARENA_LEFT + ARENA_RIGHT) * 0.5, _center_y(ZOOM_ARENA)), 1.2) \
+	_arena_tween.tween_property(camera, "position", Vector2((ARENA_LEFT + ARENA_RIGHT) * 0.5, _center_y(ZOOM_ARENA, FLOOR_SCREEN_ARENA)), 1.2) \
 		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_arena_tween.parallel().tween_property(camera, "zoom", Vector2.ONE * ZOOM_ARENA, 1.2)
 	_arena_tween.tween_callback(boss.begin_fight)
@@ -237,14 +238,14 @@ func _enter_arena() -> void:
 func _place_camera_at_start() -> void:
 	camera.position_smoothing_enabled = true
 	camera.zoom = Vector2.ONE * ZOOM_RUN
-	camera.position = Vector2(maxf(SPAWN.x + 140.0, _half_width(ZOOM_RUN)), _center_y(ZOOM_RUN))
+	camera.position = Vector2(maxf(SPAWN.x + 120.0, _half_width(ZOOM_RUN)), _center_y(ZOOM_RUN, FLOOR_SCREEN_RUN))
 	camera.reset_smoothing()
 
 
-## Kameramitte so, dass der Boden bei FLOOR_SCREEN der sichtbaren Höhe liegt.
-func _center_y(zoom: float) -> float:
+## Kameramitte so, dass der Boden bei floor_screen der sichtbaren Höhe liegt.
+func _center_y(zoom: float, floor_screen: float) -> float:
 	var h := get_viewport().get_visible_rect().size.y / zoom
-	return FLOOR_Y - h * (FLOOR_SCREEN - 0.5)
+	return FLOOR_Y - h * (floor_screen - 0.5)
 
 
 func _half_width(zoom: float) -> float:

@@ -16,6 +16,6 @@ telegraph_sfx = &"whistle"
 pattern = ExtResource("2")
 params = {
 "count": 2,
-"hover_y": 300.0,
+"hover_y": 420.0,
 "max_alive": 4
 }

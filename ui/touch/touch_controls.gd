@@ -5,12 +5,12 @@ extends CanvasLayer
 ## nach unten wischen. Damit ein normaler Sprung beim Feuern nicht verzögert, entscheidet die Geste
 ## innerhalb von LOCK_DECIDE_FRAMES; ohne Wisch zählt es als Sprung (Jump Buffer fängt das ab).
 
-const STICK_RADIUS := 110.0
+const STICK_RADIUS := 150.0
 const DEADZONE := 0.18
-const FIRE_RADIUS := 90.0       ## Ø 180 px
-const JUMP_RADIUS := 65.0       ## Ø 130 px
-const HIT_SCALE := 1.2          ## Berührfläche 20 % größer als die Grafik
-const ALPHA := 0.26
+const FIRE_RADIUS := 125.0      ## Ø 250 px
+const JUMP_RADIUS := 95.0       ## Ø 190 px
+const HIT_SCALE := 1.25         ## Berührfläche 25 % größer als die Grafik
+const ALPHA := 0.32
 const LOCK_SWIPE_PX := 36.0
 const LOCK_DECIDE_FRAMES := 4
 
@@ -60,8 +60,8 @@ func _layout() -> void:
 		var s := _view / win
 		margin_r = maxf(win.x - float(safe.end.x), 0.0) * s.x
 		margin_b = maxf(win.y - float(safe.end.y), 0.0) * s.y
-	_fire_center = Vector2(_view.x - margin_r - 70.0 - FIRE_RADIUS, _view.y - margin_b - 60.0 - FIRE_RADIUS)
-	_jump_center = _fire_center + Vector2(-FIRE_RADIUS - JUMP_RADIUS - 40.0, -FIRE_RADIUS - 10.0)
+	_fire_center = Vector2(_view.x - margin_r - 50.0 - FIRE_RADIUS, _view.y - margin_b - 40.0 - FIRE_RADIUS)
+	_jump_center = _fire_center + Vector2(-FIRE_RADIUS - JUMP_RADIUS - 30.0, -FIRE_RADIUS * 0.7)
 	_canvas.queue_redraw()
 
 
@@ -195,7 +195,7 @@ func _draw_controls() -> void:
 	if _stick_active:
 		_canvas.draw_circle(_stick_origin, STICK_RADIUS, Color(brass, ALPHA * 0.6))
 		_canvas.draw_arc(_stick_origin, STICK_RADIUS, 0, TAU, 48, Color(ink, ALPHA + 0.1), 4.0)
-		_canvas.draw_circle(_stick_knob, 44.0, Color(brass, ALPHA + 0.15))
+		_canvas.draw_circle(_stick_knob, STICK_RADIUS * 0.4, Color(brass, ALPHA + 0.15))
 	var fire_down := _count(Zone.FIRE) > 0
 	var r_fire := FIRE_RADIUS * (0.92 if fire_down else 1.0)
 	_canvas.draw_circle(_fire_center, r_fire, Color(brass, ALPHA + (0.12 if fire_down else 0.0)))
@@ -203,13 +203,13 @@ func _draw_controls() -> void:
 	var star := PackedVector2Array()
 	for i in 10:
 		var a := TAU * i / 10.0 - PI / 2.0
-		star.append(_fire_center + Vector2(cos(a), sin(a)) * (34.0 if i % 2 == 0 else 14.0))
+		star.append(_fire_center + Vector2(cos(a), sin(a)) * (FIRE_RADIUS * 0.38 if i % 2 == 0 else FIRE_RADIUS * 0.16))
 	_canvas.draw_colored_polygon(star, Color(ink, ALPHA + 0.2))
 	var jump_down := _count(Zone.JUMP) > 0 or _count(Zone.LOCK) > 0
 	var r_jump := JUMP_RADIUS * (0.92 if jump_down else 1.0)
 	_canvas.draw_circle(_jump_center, r_jump, Color(brass, ALPHA + (0.12 if jump_down else 0.0)))
 	_canvas.draw_arc(_jump_center, r_jump, 0, TAU, 40, Color(ink, ALPHA + 0.1), 4.0)
 	_canvas.draw_colored_polygon(PackedVector2Array([
-		_jump_center + Vector2(0, -26), _jump_center + Vector2(24, 12), _jump_center + Vector2(-24, 12)]), Color(ink, ALPHA + 0.2))
+		_jump_center + Vector2(0, -JUMP_RADIUS * 0.4), _jump_center + Vector2(JUMP_RADIUS * 0.37, JUMP_RADIUS * 0.2), _jump_center + Vector2(-JUMP_RADIUS * 0.37, JUMP_RADIUS * 0.2)]), Color(ink, ALPHA + 0.2))
 	if _count(Zone.LOCK) > 0:
 		_canvas.draw_arc(_jump_center, r_jump + 12.0, 0, TAU, 40, Color(Palette.HERO, 0.6), 4.0)

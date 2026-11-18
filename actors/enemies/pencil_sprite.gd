@@ -68,7 +68,8 @@ func _physics_process(delta: float) -> void:
 			var target_x := pete_pos.x + side * maxf(pete_pos.y - _home_y, 120.0)
 			if Game.camera:  # im Bild bleiben, sonst kommt der Sturz aus dem Off
 				var cx := Game.camera.get_screen_center_position().x
-				target_x = clampf(target_x, cx - 860.0, cx + 860.0)
+				var half := get_viewport_rect().size.x / Game.camera.zoom.x * 0.5 - 90.0
+				target_x = clampf(target_x, cx - half, cx + half)
 			target_x = clampf(target_x, _home_x - LEASH, _home_x + LEASH)
 			_bob += delta
 			global_position.x = move_toward(global_position.x, target_x, T.hover_speed * delta)
